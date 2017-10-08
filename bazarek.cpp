@@ -11,7 +11,7 @@ int main() {
   int largest_odd_before[1000000];
   int smallest_even_not_before[1000000];
   int smallest_odd_not_before[1000000];
-//  long long prefix_sum[1000000];
+  long long prefix_sum[1000000];
 
   cin >> n;
 
@@ -52,6 +52,7 @@ int main() {
     smallest_even_not_before[i] = remembered_even;
   }
 
+  //calculating answers for each number of products in constant time
   cin >> m;
   for (int i = 0; i < m; i++) {
     cin >> products_to_buy;
@@ -64,7 +65,7 @@ int main() {
       int x = n - products_to_buy;
 
       price_sum = prefix_sum[n - 1] - prefix_sum[x - 1];
-      if(price_sum % 2) {
+      if(!(price_sum % 2)) {
         if(largest_odd_before[x] - smallest_even_not_before[x] > largest_even_before[x] - smallest_odd_not_before[x]) {
           if(largest_odd_before[x] != 0 && smallest_even_not_before[x] != 0) {
             price_sum += largest_odd_before[x] - smallest_even_not_before[x];
@@ -77,7 +78,7 @@ int main() {
       }
     }
 
-    if(unable || price_sum % 2) {
+    if(unable || !(price_sum % 2)) {
       cout<<-1<<endl;
     } else {
       cout<<price_sum<<endl;
