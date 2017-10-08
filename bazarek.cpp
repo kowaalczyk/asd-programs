@@ -66,13 +66,25 @@ int main() {
 
       price_sum = prefix_sum[n - 1] - prefix_sum[x - 1];
       if(!(price_sum % 2)) {
-        if(largest_odd_before[x] - smallest_even_not_before[x] > largest_even_before[x] - smallest_odd_not_before[x]) {
-          if(largest_odd_before[x] != 0 && smallest_even_not_before[x] != 0) {
+        //hotfix:
+        if(largest_odd_before[x] && smallest_even_not_before[x]) {
+          if(largest_even_before[x] && smallest_odd_not_before[x]) {
+            //both options are defined - compare and use the optimal one
+            if(largest_odd_before[x] - smallest_even_not_before[x] > largest_even_before[x] - smallest_odd_not_before[x]) {
+              price_sum += largest_odd_before[x] - smallest_even_not_before[x];
+            } else {
+              price_sum += largest_even_before[x] - smallest_odd_not_before[x];
+            }
+          } else {
+            //use odd before, even after
             price_sum += largest_odd_before[x] - smallest_even_not_before[x];
           }
         } else {
-          if(largest_even_before[x] != 0 && smallest_odd_not_before[x] != 0) {
+          if(largest_even_before[x] && smallest_odd_not_before[x]) {
+            //use even before, odd after
             price_sum += largest_even_before[x] - smallest_odd_not_before[x];
+          } else {
+            //none are defined - can't change price_sum
           }
         }
       }
