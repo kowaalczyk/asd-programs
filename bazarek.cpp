@@ -3,6 +3,8 @@
 using namespace std;
 
 int main() {
+  ios::sync_with_stdio(false);
+
   int n, m;
   int price[1000000];
   int products_to_buy;
@@ -64,25 +66,29 @@ int main() {
     } else {
       int x = n - products_to_buy;
 
-      price_sum = prefix_sum[n - 1] - prefix_sum[x - 1];
+      price_sum = x>0 ? prefix_sum[n - 1] - prefix_sum[x - 1] : prefix_sum[n - 1];
       if(!(price_sum % 2)) {
         //hotfix:
         if(largest_odd_before[x] && smallest_even_not_before[x]) {
           if(largest_even_before[x] && smallest_odd_not_before[x]) {
             //both options are defined - compare and use the optimal one
             if(largest_odd_before[x] - smallest_even_not_before[x] > largest_even_before[x] - smallest_odd_not_before[x]) {
-              price_sum += largest_odd_before[x] - smallest_even_not_before[x];
+              price_sum -= smallest_even_not_before[x];
+              price_sum += largest_odd_before[x];
             } else {
-              price_sum += largest_even_before[x] - smallest_odd_not_before[x];
+              price_sum -= smallest_odd_not_before[x];
+              price_sum += largest_even_before[x];
             }
           } else {
             //use odd before, even after
-            price_sum += largest_odd_before[x] - smallest_even_not_before[x];
+            price_sum -= smallest_even_not_before[x];
+            price_sum += largest_odd_before[x];
           }
         } else {
           if(largest_even_before[x] && smallest_odd_not_before[x]) {
             //use even before, odd after
-            price_sum += largest_even_before[x] - smallest_odd_not_before[x];
+            price_sum -= smallest_odd_not_before[x];
+            price_sum += largest_even_before[x];
           } else {
             //none are defined - can't change price_sum
           }
