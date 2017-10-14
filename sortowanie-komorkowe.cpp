@@ -30,22 +30,57 @@
 using namespace std;
 
 int main() {
-    int tab[1000];
-    int n;
+    unsigned int tab[1000];
+    unsigned int n;
     cin >> n;
-    for(int i=0; i<n; i++) {
+    for(unsigned int i=0; i<n; i++) {
         cin>>tab[i];
     }
 
-    int l_cache[1000][1000];
-    int r_cache[1000][1000];
+    unsigned int l_cache[1000][1000]; //[length-1][first_el_pos]
+    unsigned int r_cache[1000][1000]; //[length-1][last_el_pos]
 
-    //TODO: calculate cache values for 2-sequences
+    //calculate cache values for 1-sequences
+    r_cache[2][0] = 0;
+    l_cache[2][n-1] = 0;
+    for(unsigned int i=0; i<n; i++) {
+        l_cache[0][i] = 1;
+        r_cache[0][i] = 1;
+    }
 
+    //dynamically calculate values for longer sequences
+    for(unsigned int length_index = 1; length_index < n; length_index++) {
+        for(unsigned int start = 0; start+length_index < n; start++) {
+            unsigned int end = start + length_index;
 
-    //TODO: dynamically calculate values for longer sequences
-    for(int start = 0; start < n; start++) {
-        for(int end = 0; end < n; end++) {
+            cout << "start:" << start << " end:" << end << " length_index:" << length_index << endl; // DEBUG
+
+            unsigned int current_r = 0;
+            if(tab[end-1] < tab[end]) {
+                current_r += r_cache[length_index-1][end-1];
+            }
+            if(tab[start] < tab[end]) {
+                current_r += l_cache[length_index-1][start];
+            }
+            r_cache[length_index][end] = current_r;
+
+            unsigned int current_l = 0;
+            if(tab[start] < tab[start+1]) {
+                current_l += l_cache[length_index-1][start+1];
+            }
+            if(tab[start] < tab[end]) {
+                current_l += r_cache[length_index-1][end];
+            }
+            l_cache[length_index][start] = current_l;
+
+            cout << "l_cache:";
+            for(int i=0; i<n; i++) { cout << l_cache[length_index][i] << " "; }
+            cout << endl;
+
+            cout << "r_cache:";
+            for(int i=0; i<n; i++) { cout << r_cache[length_index][i] << " "; }
+            cout << endl;
+
             //r_cache[start..end]: - # of (start-end)-sequences ending with tab[end]
                 //add r_cache[start..end-1] if tab[end-1] < tab[end]
                 //add l_cache[start..end-1] if tab[start] < tab[end]
@@ -55,7 +90,7 @@ int main() {
         }
     }
 
-    //TODO: Return the answer
+    cout << r_cache[n-1][n-1] + l_cache[n-1][0] <<endl;
 
     return 0;
 }
