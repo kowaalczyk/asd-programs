@@ -40,16 +40,32 @@ int main() {
     unsigned int l_cache[1000][1000]; //[length-1][first_el_pos]
     unsigned int r_cache[1000][1000]; //[length-1][last_el_pos]
 
-    //calculate cache values for 1-sequences
-    r_cache[2][0] = 0;
-    l_cache[2][n-1] = 0;
-    for(unsigned int i=0; i<n; i++) {
-        l_cache[0][i] = 1;
-        r_cache[0][i] = 1;
+    //calculate cache values for 2-sequences
+    r_cache[1][0] = 0;
+    l_cache[1][n-1] = 0;
+    for(unsigned int i=0; i<n-1; i++) {
+        if(tab[i] < tab[i+1]) {
+            r_cache[1][i+1] = 1;
+        } else {
+            r_cache[1][i+1] = 0;
+        }
+        if(tab[i] < tab[i+1]) {
+            l_cache[1][i] = 1;
+        } else {
+            l_cache[1][i] = 0;
+        }
     }
 
+    cout << "l_cache:";
+    for(int i=0; i<n; i++) { cout << l_cache[1][i] << " "; }
+    cout << endl;
+
+    cout << "r_cache:";
+    for(int i=0; i<n; i++) { cout << r_cache[1][i] << " "; }
+    cout << endl;
+
     //dynamically calculate values for longer sequences
-    for(unsigned int length_index = 1; length_index < n; length_index++) {
+    for(unsigned int length_index = 2; length_index < n; length_index++) {
         for(unsigned int start = 0; start+length_index < n; start++) {
             unsigned int end = start + length_index;
 
@@ -89,6 +105,9 @@ int main() {
                 //add r_cache[start+1..end] if tab[start] < tab[end]
         }
     }
+
+    ans = 0;
+
 
     cout << r_cache[n-1][n-1] + l_cache[n-1][0] <<endl;
 
