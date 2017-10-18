@@ -1,3 +1,5 @@
+// this is just a helper printing variable sizes available on current machine
+
 #include <stdio.h>
 
 int main() {

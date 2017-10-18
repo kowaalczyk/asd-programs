@@ -1,3 +1,5 @@
+// problem description (pl): https://szkopul.edu.pl/c/laboratorium-z-asd-20172018/p/baz/
+
 #include <iostream>
 
 using namespace std;
