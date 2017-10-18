@@ -27,6 +27,8 @@
 
 #include <iostream>
 
+#define BIL 1000000000
+
 using namespace std;
 
 int main() {
@@ -35,6 +37,11 @@ int main() {
     cin >> n;
     for(unsigned int i=0; i<n; i++) {
         cin>>tab[i];
+    }
+
+    if(n==1) {
+        cout << 1 << endl;
+        return 0;
     }
 
     unsigned int l_cache[1000][1000]; //[length-1][first_el_pos]
@@ -55,47 +62,47 @@ int main() {
             l_cache[1][i] = 0;
         }
     }
-
-    cout << "l_cache:";
-    for(int i=0; i<n; i++) { cout << l_cache[1][i] << " "; }
-    cout << endl;
-
-    cout << "r_cache:";
-    for(int i=0; i<n; i++) { cout << r_cache[1][i] << " "; }
-    cout << endl;
+//
+//    cout << "l_cache:";
+//    for(int i=0; i<n; i++) { cout << l_cache[1][i] << " "; }
+//    cout << endl;
+//
+//    cout << "r_cache:";
+//    for(int i=0; i<n; i++) { cout << r_cache[1][i] << " "; }
+//    cout << endl;
 
     //dynamically calculate values for longer sequences
     for(unsigned int length_index = 2; length_index < n; length_index++) {
         for(unsigned int start = 0; start+length_index < n; start++) {
             unsigned int end = start + length_index;
 
-            cout << "start:" << start << " end:" << end << " length_index:" << length_index << endl; // DEBUG
+//            cout << "start:" << start << " end:" << end << " length_index:" << length_index << endl; // DEBUG
 
             unsigned int current_r = 0;
             if(tab[end-1] < tab[end]) {
-                current_r += r_cache[length_index-1][end-1];
+                current_r += r_cache[length_index-1][end-1] % BIL;
             }
             if(tab[start] < tab[end]) {
-                current_r += l_cache[length_index-1][start];
+                current_r += l_cache[length_index-1][start] % BIL;
             }
-            r_cache[length_index][end] = current_r;
+            r_cache[length_index][end] = current_r % BIL;
 
             unsigned int current_l = 0;
             if(tab[start] < tab[start+1]) {
-                current_l += l_cache[length_index-1][start+1];
+                current_l += l_cache[length_index-1][start+1] % BIL;
             }
             if(tab[start] < tab[end]) {
-                current_l += r_cache[length_index-1][end];
+                current_l += r_cache[length_index-1][end] % BIL;
             }
-            l_cache[length_index][start] = current_l;
-
-            cout << "l_cache:";
-            for(int i=0; i<n; i++) { cout << l_cache[length_index][i] << " "; }
-            cout << endl;
-
-            cout << "r_cache:";
-            for(int i=0; i<n; i++) { cout << r_cache[length_index][i] << " "; }
-            cout << endl;
+            l_cache[length_index][start] = current_l % BIL;
+//
+//            cout << "l_cache:";
+//            for(int i=0; i<n; i++) { cout << l_cache[length_index][i] << " "; }
+//            cout << endl;
+//
+//            cout << "r_cache:";
+//            for(int i=0; i<n; i++) { cout << r_cache[length_index][i] << " "; }
+//            cout << endl;
 
             //r_cache[start..end]: - # of (start-end)-sequences ending with tab[end]
                 //add r_cache[start..end-1] if tab[end-1] < tab[end]
@@ -106,10 +113,7 @@ int main() {
         }
     }
 
-    ans = 0;
-
-
-    cout << r_cache[n-1][n-1] + l_cache[n-1][0] <<endl;
+    cout << (r_cache[n-1][n-1] % BIL + l_cache[n-1][0] % BIL) % BIL <<endl;
 
     return 0;
 }
