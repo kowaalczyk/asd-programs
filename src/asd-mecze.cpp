@@ -1,29 +1,25 @@
 #include <iostream>
 #include <algorithm>
+#include <bitset>
 
 using namespace std;
-
-// bitow w long longu jest wiecej niz 50 (64) wiec
-// mecze mozna pamietac jako bity w long longu
-// wczytujemy mecze, sortujemy, dodajemy 2^(umer meczu) dla zawodnikow dla 2 polowy
-// mamy n (tyle ile zawodnikow) wektorow liczb ktore reprezentuja wystapienia danego zwodnika w meczu
-// jesli mamy 2 takie same ciagi{0,1} (liczby) w posortowanym wektorze tzn ze NIE
-// w przeciwnym wypadku TAK\
 
 int main() {
     int n, m;
     cin >> n;
     cin >> m;
 
-    unsigned long long team_list[40000];
+    vector<unsigned long long> team_list;
+    team_list.resize(40000);
     for (int i = 0; i < 40000; i++) {
-        team_list[i] = 0;
+        team_list.push_back(0);
     }
 
     unsigned long long match_bit = 1;
     for (int i = 0; i < m; i++) {
         int j = 0;
         int current_player;
+
         // read players from 1st team (0s)
         while (j < n / 2) {
             cin >> current_player;
@@ -42,7 +38,8 @@ int main() {
         match_bit *= 2;
     }
 
-    sort(begin(team_list), end(team_list));
+//    sorting the vector to add duplicates (only sort elements from [0..n) to prevent reading default zeros)
+    sort(team_list.begin(), team_list.begin()+n);
 
     for (int i = 0; i < n - 1; i++) {
         if (team_list[i] == team_list[i + 1]) {
@@ -50,7 +47,7 @@ int main() {
             return 0;
         }
     }
-
+//    no duplicates => no 2 players played in exactly the same teams in every mach
     cout << "TAK" << endl;
     return 0;
 }
