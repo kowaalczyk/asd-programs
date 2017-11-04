@@ -4,67 +4,70 @@ using namespace std;
 
 #define MOD_BIL %1000000000
 
-// INTERVAL TREE IMPLEMENTATION
+static const unsigned long long TREE_MAX_SIZE = 160000;
+static const int N_MAX_SIZE = 20000;
 
+// INTERVAL TREE IMPLEMENTATION
+// this line is added to check whether solution does produce stable results
 // assuming 1 is the index of root, [tree_size/2...tree_size-1] are leaves
-unsigned int tree[160000];
-unsigned int tree_size;
+unsigned long long tree[TREE_MAX_SIZE];
+unsigned long long tree_size;
 
 // tree helpers
 
-unsigned int tree_pos(unsigned int leaf_pos) {
+unsigned long long tree_pos(unsigned long long leaf_pos) {
     return tree_size/2 + leaf_pos;
 }
 
-unsigned int tree_parent_pos(unsigned int node_pos) {
+unsigned long long tree_parent_pos(unsigned long long node_pos) {
     return node_pos/2;
 }
 
-unsigned int tree_lson_pos(unsigned int node_pos) {
+unsigned long long tree_lson_pos(unsigned long long node_pos) {
     return node_pos*2;
 }
 
-unsigned int tree_rson_pos(unsigned int node_pos) {
+unsigned long long tree_rson_pos(unsigned long long node_pos) {
     return 1 + node_pos*2;
 }
 
 // tree interface
-void tree_update_parents(unsigned int node_pos) {
+void tree_update_parents(unsigned long long node_pos) {
     if(node_pos > 1) {
-        unsigned int parent_pos = tree_parent_pos(node_pos);
+        unsigned long long parent_pos = tree_parent_pos(node_pos);
         tree[parent_pos] = (tree[tree_lson_pos(parent_pos)] MOD_BIL  + tree[tree_rson_pos(parent_pos)] MOD_BIL) MOD_BIL;
         tree_update_parents(parent_pos);
     }
 }
 
 void tree_reset() {
-    for(int i=0; i<40000; i++) {
+    for(int i=0; i < TREE_MAX_SIZE; i++) {
         tree[i] = 0;
     }
 }
 
-void tree_create(unsigned int leaves) {
+void tree_create(unsigned long long leaves) {
     tree_size = 8*leaves;
     tree_reset();
 }
 
-void tree_set(unsigned int leaf_pos, unsigned int val) {
-    unsigned int pos = tree_pos(leaf_pos);
+void tree_set(unsigned long long leaf_pos, unsigned long long val) {
+    unsigned long long pos = tree_pos(leaf_pos);
     tree[pos] = val MOD_BIL;
     tree_update_parents(pos);
 }
 
 // for leaf_pos j, this will return sum of values from leaves at positions [0..j-1]
-unsigned int leaf_sum(unsigned int leaf_pos) {
-    unsigned int sum = 0;
+unsigned long long leaf_sum(unsigned long long leaf_pos) {
+    unsigned long long sum = 0;
 
-    unsigned int pos = tree_pos(leaf_pos);
-    unsigned int prev_pos = pos;
+    unsigned long long pos = tree_pos(leaf_pos);
+    unsigned long long prev_pos = pos;
     pos = tree_parent_pos(pos);
     while(pos>=1) {
         // add sum from left subtree if we have moved to the left
         if(prev_pos != tree_lson_pos(pos)) {
-            sum += tree[tree_lson_pos(pos)] MOD_BIL;
+            sum = (sum MOD_BIL + tree[tree_lson_pos(pos)] MOD_BIL) MOD_BIL;
         }
 
         prev_pos = pos;
@@ -79,32 +82,33 @@ unsigned int leaf_sum(unsigned int leaf_pos) {
 // and place (current_k-1)-inversions in its place (so that it can be counted by following iterations in a loop)
 
 int main() {
-    unsigned int n, k;
-    unsigned int tab[20000];
-    unsigned int new_leaves[20000];
-    unsigned int old_leaves[20000];
-    unsigned int k_inversions = 0;
+    unsigned long long n, k;
+    unsigned long long tab[N_MAX_SIZE];
+    unsigned long long new_leaves[N_MAX_SIZE];
+    unsigned long long old_leaves[N_MAX_SIZE];
+    unsigned long long k_inversions = 0;
 
     cin >> n >> k;
-    for(unsigned int i=0; i<n; i++) {
+    for(unsigned long long i=0; i<n; i++) {
+        old_leaves[i] = 1;
+        new_leaves[i] = 0;
         cin >> tab[i];
     }
-    for(unsigned int i=n; i<20000; i++) {
+    for(unsigned long long i=n; i < N_MAX_SIZE; i++) {
+        old_leaves[i] = 0;
+        new_leaves[i] = 0;
         tab[i] = 0;
     }
     tree_create(n);
-    for(unsigned int i=0; i<20000; i++) {
-        old_leaves[i] = 1;
-    }
 
     /*
-     * new_leaves[i] := (current_k)-inversions where i is the smallest number
-     * old_leaves[i] := (current_k-1)-inversions where i is the smallest number
+     * new_leaves[i] := (current_k)-inversions where i is the biggest number
+     * old_leaves[i] := (current_k-1)-inversions where i is the biggest number
      */
-    for(unsigned int current_k=2; current_k<=k; current_k++) {
+    for(unsigned long long current_k=2; current_k<=k; current_k++) {
         tree_reset();
-        for(unsigned int i=n; i>0; i--) {
-            unsigned int val = tab[i-1];
+        for(unsigned long long i=n; i>0; i--) {
+            unsigned long long val = tab[i-1];
             // calculate (current_k)-inversions and store it in new leaves
             new_leaves[val-1] = leaf_sum(val-1) MOD_BIL;
             // add number of (current_k-1)-inversions to the tree so that the following numbers can count it
@@ -112,12 +116,12 @@ int main() {
         }
         if(current_k == k) {
             // calculate sum of (k)-inversions from new_leaves array
-            for(unsigned int i=0; i<20000; i++) {
-                k_inversions += new_leaves[i] MOD_BIL;
+            for(unsigned long long i=0; i<n; i++) {
+                k_inversions = (k_inversions MOD_BIL + new_leaves[i] MOD_BIL) MOD_BIL;
             }
         } else {
             // update old leaves
-            for(unsigned int i=0; i<20000; i++) {
+            for(unsigned long long i=0; i < N_MAX_SIZE; i++) {
                 old_leaves[i] = new_leaves[i] MOD_BIL;
             }
         }
