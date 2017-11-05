@@ -8,8 +8,8 @@ static const unsigned long long TREE_MAX_SIZE = 160000;
 static const int N_MAX_SIZE = 20000;
 
 // INTERVAL TREE IMPLEMENTATION
-// this line is added to check whether solution does produce stable results
 // assuming 1 is the index of root, [tree_size/2...tree_size-1] are leaves
+// (tree[0] is just a guard preventing overflow in loops)
 unsigned long long tree[TREE_MAX_SIZE];
 unsigned long long tree_size;
 
@@ -32,6 +32,7 @@ unsigned long long tree_rson_pos(unsigned long long node_pos) {
 }
 
 // tree interface
+
 void tree_update_parents(unsigned long long node_pos) {
     if(node_pos > 1) {
         unsigned long long parent_pos = tree_parent_pos(node_pos);
@@ -47,7 +48,11 @@ void tree_reset() {
 }
 
 void tree_create(unsigned long long leaves) {
-    tree_size = 8*leaves;
+    tree_size = 1;
+    while(tree_size <= 2*leaves) {
+        tree_size *= 2;
+    }
+    tree_size *= 2;
     tree_reset();
 }
 
@@ -69,16 +74,16 @@ unsigned long long leaf_sum(unsigned long long leaf_pos) {
         if(prev_pos != tree_lson_pos(pos)) {
             sum = (sum MOD_BIL + tree[tree_lson_pos(pos)] MOD_BIL) MOD_BIL;
         }
-
         prev_pos = pos;
         pos = tree_parent_pos(pos);
     }
     return sum MOD_BIL;
 }
 
-// 2lists: one contains current_k-inversions, second one - (current_one-1)-inversions
+// SOLUTION
+// 2lists: one contains current_k-inversions, second one - (current_k-1)-inversions
 // tree is initialized to zeros for every level
-// iterating from r too l, we count the current_k from the tree and place
+// iterating from r to l, we count the current_k from the tree
 // and place (current_k-1)-inversions in its place (so that it can be counted by following iterations in a loop)
 
 int main() {
@@ -90,9 +95,9 @@ int main() {
 
     cin >> n >> k;
     for(unsigned long long i=0; i<n; i++) {
+        cin >> tab[i];
         old_leaves[i] = 1;
         new_leaves[i] = 0;
-        cin >> tab[i];
     }
     for(unsigned long long i=n; i < N_MAX_SIZE; i++) {
         old_leaves[i] = 0;
@@ -116,7 +121,7 @@ int main() {
         }
         if(current_k == k) {
             // calculate sum of (k)-inversions from new_leaves array
-            for(unsigned long long i=0; i<n; i++) {
+            for(unsigned long long i=0; i < N_MAX_SIZE; i++) {
                 k_inversions = (k_inversions MOD_BIL + new_leaves[i] MOD_BIL) MOD_BIL;
             }
         } else {
@@ -126,7 +131,6 @@ int main() {
             }
         }
     }
-
     cout << k_inversions MOD_BIL << endl;
     return 0;
 }
