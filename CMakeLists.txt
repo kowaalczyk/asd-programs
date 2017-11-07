@@ -1,5 +1,8 @@
+cmake_minimum_required(VERSION 3.8)
+
 set (ZALICZENIOWE_1 src/zaliczeniowe1.cpp)
-set (TEST_INT_TREE tests/interval-tree-tests.cpp)
+set (INT_TREE_IMPL src/interval_tree.cpp)
+set (TEST_INT_TREE src/interval-tree-tests.cpp src/interval_tree.h src/interval_tree.cpp)
 set (MAL_AUTO src/malowanie-autostrady.cpp)
 set (KINWERSJE src/k-inwersje.cpp)
 set (MECZE src/asd-mecze.cpp)
@@ -12,7 +15,6 @@ set(CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wall")
 
 add_executable(zaliczeniowe1 ${ZALICZENIOWE_1})
-add_executable(testy_drzewa ${TEST_INT_TREE})
 add_executable(malowanie-autostrady ${MAL_AUTO})
 add_executable(k-inwersje ${KINWERSJE})
 add_executable(mecze ${MECZE})
@@ -20,3 +22,8 @@ add_executable (sortowanie_komorkowe ${SORTOWANIE_KOMORKOWE})
 add_executable(matryca ${MATRYCA})
 add_executable(bazarek ${BAZAREK})
 add_executable(check_variable_sizes ${VAR_SIZE})
+
+
+add_executable(interval_tree_impl ${INT_TREE_IMPL})
+add_executable(testy_drzewa ${TEST_INT_TREE})
+#add_dependencies(testy_drzewa interval_tree_impl)
