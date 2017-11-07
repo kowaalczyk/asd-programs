@@ -8,17 +8,6 @@ using std::endl;
 // assuming 1 is the index of root, [tree_size/2...tree_size-1] are leaves
 // (tree[0] is just a guard preventing overflow in loops)
 
-//#define MOD_BIL %1000000000
-//
-//typedef unsigned long long tree_val_t;
-//typedef unsigned int tree_pos_t;
-//
-//static const tree_pos_t TREE_MAX_SIZE = 160000;
-//static const tree_pos_t N_MAX_SIZE = 20000;
-
-//multiple trees can be handled by adding more arrays
-//tree_val_t tree[TREE_MAX_SIZE];
-
 // helpers
 
 tree_pos_t &tree_size() {
