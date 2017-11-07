@@ -105,7 +105,7 @@ tree_val_t tree_leaf_sum(tree_val_t tree[], tree_pos_t leaf_pos) {
     while(pos>=1) {
         // add sum from left subtree if we have moved to the left
         if(prev_pos != tree_lson_pos(pos)) {
-            sum = (sum MOD_BIL + tree[tree_lson_pos(pos)] MOD_BIL) MOD_BIL;
+            sum = tree_base_func(sum MOD_BIL, tree[tree_lson_pos(pos)] MOD_BIL) MOD_BIL;
         }
         prev_pos = pos;
         pos = tree_parent_pos(pos);
