@@ -1,7 +1,3 @@
-//
-// Created by kowal on 07.11.17.
-//
-
 #ifndef PROJECT_INTERVAL_TREE_H
 #define PROJECT_INTERVAL_TREE_H
 

@@ -1,35 +1,14 @@
 //
 // Created by kowal on 04.11.17.
 // Usage:
-// 0. read code requirements below
-// 1. paste Your code anywhere before main()
-// 2. compile and run
+// 1. Include header
+// 2. run main() in this file
 //
 
 #include <iostream>
 #include "interval_tree.h"
 
 using namespace std;
-
-// NOTE: Code should implement following methods / constants:
-// Example implementation:
-// assuming 1 is the index of root, [tree_size/2...tree_size-1] are leaves
-// (tree[0] is just a guard preventing overflow in loops)
-//static const unsigned long long TREE_MAX_SIZE = 160000;
-//static const int N_MAX_SIZE = 20000;
-//unsigned long long tree[TREE_MAX_SIZE];
-//unsigned long long tree_size;
-//void tree_print_debug();
-//unsigned long long tree_root_pos();
-//unsigned long long tree_pos(unsigned long long leaf_pos);
-//unsigned long long tree_parent_pos(unsigned long long node_pos);
-//unsigned long long tree_lson_pos(unsigned long long node_pos);
-//unsigned long long tree_rson_pos(unsigned long long node_pos);
-//void tree_update_parents(unsigned long long node_pos);
-//void tree_reset();
-//void tree_create(unsigned long long leaves);
-//void tree_set(unsigned long long leaf_pos, unsigned long long val);
-//unsigned long long tree_leaf_sum(unsigned long long leaf_pos); // for leaf_pos j, this will return sum of values from leaves at positions [0..j-1]
 
 tree_val_t tree[TREE_MAX_SIZE];
 
