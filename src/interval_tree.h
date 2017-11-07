@@ -13,6 +13,13 @@
 typedef unsigned long long tree_val_t;
 typedef unsigned int tree_pos_t;
 
+typedef struct tree {
+    tree_pos_t size;
+    tree_val_t arr[];
+    tree_val_t (*base_func)(tree_val_t, tree_val_t);
+} tree_t;
+
+
 static const tree_pos_t TREE_MAX_SIZE = 160000;
 static const tree_pos_t N_MAX_SIZE = 20000;
 
@@ -38,8 +45,10 @@ tree_val_t tree_base_func(tree_val_t lson_value, tree_val_t rson_value);
 // Basic tree functions
 void tree_update_parents(tree_val_t tree[], tree_pos_t node_pos);
 void tree_reset(tree_val_t tree[]);
-void tree_create(tree_val_t tree[], tree_pos_t leaves);
 void tree_set(tree_val_t tree[], tree_pos_t leaf_pos, tree_val_t val);
+
+//TODO: Document
+tree_t &tree_create(tree_val_t arr[], tree_pos_t leaves, tree_val_t (*base_func)(tree_val_t, tree_val_t));
 
 // Extended tree functions (for specific use cases)
 

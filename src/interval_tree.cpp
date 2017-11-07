@@ -26,8 +26,8 @@ tree_pos_t tree_root_pos() {
     return 1;
 }
 
-tree_pos_t tree_pos(tree_pos_t leaf_pos) {
-    return tree_size/2 + leaf_pos;
+tree_pos_t tree_pos(const tree_t &tree, tree_pos_t leaf_pos) {
+    return tree.size/2 + leaf_pos;
 }
 
 tree_pos_t tree_parent_pos(tree_pos_t node_pos) {
@@ -42,9 +42,11 @@ tree_pos_t tree_rson_pos(tree_pos_t node_pos) {
     return 1 + node_pos*2;
 }
 
-tree_val_t tree_base_func(tree_val_t lson_value, tree_val_t rson_value) {
-    return lson_value MOD_BIL + rson_value MOD_BIL;
+tree_val_t tree_base_func(const tree_t &tree, tree_val_t lson_value, tree_val_t rson_value) {
+    return tree.base_func(lson_value, rson_value);
 }
+
+// TODO: Fix everything below to use const tree_t& where necessary, add type templates to tree struct
 
 void tree_print_debug(tree_val_t tree[]) {
     tree_pos_t breaker = 1;
@@ -78,13 +80,15 @@ void tree_reset(tree_val_t tree[]) {
     }
 }
 
-void tree_create(tree_val_t tree[], tree_pos_t leaves) {
-    tree_size = 1;
+tree_t &tree_create(tree_val_t arr[], tree_pos_t leaves, tree_val_t (*base_func)(tree_val_t, tree_val_t)) {
+    tree_pos_t tree_size = 1;
     while(tree_size <= 2*leaves) {
         tree_size *= 2;
     }
     tree_size *= 2;
+    tree_t tree = { tree_size, arr, base_func };
     tree_reset(tree);
+    return tree;
 }
 
 void tree_set(tree_val_t tree[], tree_pos_t leaf_pos, tree_val_t val) {
