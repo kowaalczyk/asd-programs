@@ -1,3 +1,4 @@
+set (ZALICZENIOWE_1 src/zaliczeniowe1.cpp)
 set (TEST_INT_TREE tests/interval-tree-tests.cpp)
 set (MAL_AUTO src/malowanie-autostrady.cpp)
 set (KINWERSJE src/k-inwersje.cpp)
@@ -10,6 +11,7 @@ set (VAR_SIZE src/var-size.c)
 set(CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wall")
 
+add_executable(zaliczeniowe1 ${ZALICZENIOWE_1})
 add_executable(testy_drzewa ${TEST_INT_TREE})
 add_executable(malowanie-autostrady ${MAL_AUTO})
 add_executable(k-inwersje ${KINWERSJE})
