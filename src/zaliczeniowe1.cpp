@@ -1,21 +1,20 @@
 #include <iostream>
-#include <assert.h>
 
 using namespace std;
 
 
-typedef int tree_val_t;
-typedef int tree_pos_t;
-
-static const tree_pos_t TREE_MAX_SIZE = 800008; //TODO: Double-check
-static const tree_pos_t N_MAX_SIZE = 100001;
+//typedef int tree_val_t;
+//typedef int tree_pos_t;
+//
+//static const tree_pos_t TREE_MAX_SIZE = 800008; //TODO: Double-check
+//static const tree_pos_t N_MAX_SIZE = 100001;
 static const int MAX_ALLOWED_REVENUE = 2000000000;
 static const int MIN_ALLOWED_REVENUE = 0;
-
-tree_val_t min_t[TREE_MAX_SIZE];
-tree_val_t max_t[TREE_MAX_SIZE];
-tree_val_t delta[TREE_MAX_SIZE];
-bool calculated[TREE_MAX_SIZE];
+//
+//tree_val_t min_t[TREE_MAX_SIZE];
+//tree_val_t max_t[TREE_MAX_SIZE];
+//tree_val_t delta[TREE_MAX_SIZE];
+//bool calculated[TREE_MAX_SIZE];
 
 // ------------------------------------------------------------------------------------------
 
@@ -24,8 +23,8 @@ bool calculated[TREE_MAX_SIZE];
 int main() {
     int n, m;
     cin >> n;
-    int rev[n];
-    for(int i=0; i<n; i++) {
+    int rev[n+1]; // 0  is a guard (input data is indexed from 1)
+    for(int i=1; i<=n; i++) {
         cin >> rev[i];
     }
     cin >> m;
@@ -35,8 +34,6 @@ int main() {
     for(int I=0; I<m; I++) {
         int current_l, current_r, current_delta;
         cin >> current_l >> current_r >> current_delta;
-        assert(1 <= current_l && current_l <= n);
-        assert(1 <= current_r && current_r <= n);
 
         int ans = -1;
 
@@ -52,8 +49,8 @@ int main() {
                 rev[i] += current_delta;
             }
             ans = 0;
-            for(int i=1; i<n; i++) {
-                if(rev[i] - rev[i-1] > 0) {
+            for(int i=2; i<=n; i++) {
+                if(rev[i] > rev[i-1]) {
                     ans++;
                 }
             }
