@@ -17,17 +17,21 @@ using std::endl;
 //static const tree_pos_t N_MAX_SIZE = 20000;
 
 //multiple trees can be handled by adding more arrays
-tree_val_t tree[TREE_MAX_SIZE];
-tree_val_t tree_size;
+//tree_val_t tree[TREE_MAX_SIZE];
 
 // helpers
+
+tree_pos_t &tree_size() {
+    static tree_pos_t tree_size;
+    return tree_size;
+}
 
 tree_pos_t tree_root_pos() {
     return 1;
 }
 
 tree_pos_t tree_pos(tree_pos_t leaf_pos) {
-    return tree_size/2 + leaf_pos;
+    return tree_size()/2 + leaf_pos;
 }
 
 tree_pos_t tree_parent_pos(tree_pos_t node_pos) {
@@ -50,7 +54,7 @@ void tree_print_debug(tree_val_t tree[]) {
     tree_pos_t breaker = 1;
     tree_pos_t counter = 0;
 
-    for(tree_pos_t i=1; i < tree_size; i++) {
+    for(tree_pos_t i=1; i < tree_size(); i++) {
         cout << tree[i] << ' ';
         counter++;
         if(counter >= breaker) {
@@ -79,11 +83,11 @@ void tree_reset(tree_val_t tree[]) {
 }
 
 void tree_create(tree_val_t tree[], tree_pos_t leaves) {
-    tree_size = 1;
-    while(tree_size <= 2*leaves) {
-        tree_size *= 2;
+    tree_size() = 1;
+    while(tree_size() <= 2*leaves) {
+        tree_size() *= 2;
     }
-    tree_size *= 2;
+    tree_size() *= 2;
     tree_reset(tree);
 }
 

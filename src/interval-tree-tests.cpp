@@ -1,9 +1,7 @@
 //
 // Created by kowal on 04.11.17.
 // Usage:
-// 0. read code requirements below
-// 1. paste Your code anywhere before main()
-// 2. compile and run
+// Include header and run!
 //
 
 #include <iostream>
@@ -11,28 +9,7 @@
 
 using namespace std;
 
-// NOTE: Code should implement following methods / constants:
-// Example implementation:
-// assuming 1 is the index of root, [tree_size/2...tree_size-1] are leaves
-// (tree[0] is just a guard preventing overflow in loops)
-//static const unsigned long long TREE_MAX_SIZE = 160000;
-//static const int N_MAX_SIZE = 20000;
-//unsigned long long tree[TREE_MAX_SIZE];
-//unsigned long long tree_size;
-//void tree_print_debug();
-//unsigned long long tree_root_pos();
-//unsigned long long tree_pos(unsigned long long leaf_pos);
-//unsigned long long tree_parent_pos(unsigned long long node_pos);
-//unsigned long long tree_lson_pos(unsigned long long node_pos);
-//unsigned long long tree_rson_pos(unsigned long long node_pos);
-//void tree_update_parents(unsigned long long node_pos);
-//void tree_reset();
-//void tree_create(unsigned long long leaves);
-//void tree_set(unsigned long long leaf_pos, unsigned long long val);
-//unsigned long long tree_leaf_sum(unsigned long long leaf_pos); // for leaf_pos j, this will return sum of values from leaves at positions [0..j-1]
-
 tree_val_t tree[TREE_MAX_SIZE];
-tree_val_t tree_size;
 
 // TEST ENGINE IMPLEMENTATION
 
@@ -90,12 +67,12 @@ int main() {
 
         start_case("leaves start at tree_size/2");
         {
-            assert_eq(tree_pos(0), tree_size/2);
+            assert_eq(tree_pos(0), tree_size()/2);
         }
 
         start_case("leaves end at tree_size/2 + (n-1)");
         {
-            assert_eq(tree_pos(n-1), tree_size/2 + n-1);
+            assert_eq(tree_pos(n-1), tree_size()/2 + n-1);
         }
 
         start_case("single value inserted correctly");
@@ -123,7 +100,7 @@ int main() {
         start_case("node value == sum of values from sons (where possible)");
         {
             tree_reset(tree);
-            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size; i++) {
+            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size(); i++) {
                 assert_eq(tree[i], tree[tree_lson_pos(i)] + tree[tree_rson_pos(i)]);
             }
         }
@@ -151,12 +128,12 @@ int main() {
 
         start_case("leaves start at tree_size/2");
         {
-            assert_eq(tree_pos(0), tree_size/2);
+            assert_eq(tree_pos(0), tree_size()/2);
         }
 
         start_case("leaves end at tree_size/2 + (n-1)");
         {
-            assert_eq(tree_pos(n-1), tree_size/2 + n-1);
+            assert_eq(tree_pos(n-1), tree_size()/2 + n-1);
         }
 
         start_case("single value inserted correctly");
@@ -196,7 +173,7 @@ int main() {
             for(unsigned long long i=0; i<n; i++) {
                 tree_set(tree, i, i*i);
             }
-            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size; i++) {
+            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size(); i++) {
                 assert_eq(tree[i], (tree[tree_lson_pos(i)] + tree[tree_rson_pos(i)]) MOD_BIL);
             }
         }
@@ -231,7 +208,7 @@ int main() {
             for(unsigned long long i=0; i<n; i++) {
                 tree_set(tree, i, i);
             }
-            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size; i++) {
+            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size(); i++) {
                 assert_eq(tree[i], (tree[tree_lson_pos(i)] + tree[tree_rson_pos(i)]) MOD_BIL);
             }
         }
@@ -270,12 +247,12 @@ int main() {
 
         start_case("leaves start at tree_size/2");
         {
-            assert_eq(tree_pos(0), tree_size/2);
+            assert_eq(tree_pos(0), tree_size()/2);
         }
 
         start_case("leaves end at tree_size/2 + (n-1)");
         {
-            assert_eq(tree_pos(n-1), tree_size/2 + n-1);
+            assert_eq(tree_pos(n-1), tree_size()/2 + n-1);
         }
 
         start_case("single value inserted correctly");
@@ -315,7 +292,7 @@ int main() {
             for(unsigned long long i=0; i<n; i++) {
                 tree_set(tree, i, i);
             }
-            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size; i++) {
+            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size(); i++) {
                 assert_eq(tree[i], (tree[tree_lson_pos(i)] + tree[tree_rson_pos(i)]) MOD_BIL);
             }
         }
@@ -350,7 +327,7 @@ int main() {
             for(unsigned long long i=0; i<n; i++) {
                 tree_set(tree, i, i);
             }
-            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size; i++) {
+            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size(); i++) {
                 assert_eq(tree[i], (tree[tree_lson_pos(i)] + tree[tree_rson_pos(i)]) MOD_BIL);
             }
         }
@@ -389,12 +366,12 @@ int main() {
 
         start_case("leaves start at tree_size/2");
         {
-            assert_eq(tree_pos(0), tree_size/2);
+            assert_eq(tree_pos(0), tree_size()/2);
         }
 
         start_case("leaves end at tree_size/2 + (n-1)");
         {
-            assert_eq(tree_pos(n-1), tree_size/2 + n-1);
+            assert_eq(tree_pos(n-1), tree_size()/2 + n-1);
         }
 
         start_case("single value inserted correctly");
@@ -434,7 +411,7 @@ int main() {
             for(unsigned long long i=0; i<n; i++) {
                 tree_set(tree, i, i*i);
             }
-            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size; i++) {
+            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size(); i++) {
                 assert_eq(tree[i], (tree[tree_lson_pos(i)] + tree[tree_rson_pos(i)]) MOD_BIL);
             }
         }
@@ -469,7 +446,7 @@ int main() {
             for(unsigned long long i=0; i<n; i++) {
                 tree_set(tree, i, i);
             }
-            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size; i++) {
+            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size(); i++) {
                 assert_eq(tree[i], (tree[tree_lson_pos(i)] + tree[tree_rson_pos(i)]) MOD_BIL);
             }
         }
@@ -508,12 +485,12 @@ int main() {
 
         start_case("leaves start at tree_size/2");
         {
-            assert_eq(tree_pos(0), tree_size/2);
+            assert_eq(tree_pos(0), tree_size()/2);
         }
 
         start_case("leaves end at tree_size/2 + (n-1)");
         {
-            assert_eq(tree_pos(n-1), tree_size/2 + n-1);
+            assert_eq(tree_pos(n-1), tree_size()/2 + n-1);
         }
 
         start_case("single value inserted correctly");
@@ -553,7 +530,7 @@ int main() {
             for(unsigned long long i=0; i<n; i++) {
                 tree_set(tree, i, i*i);
             }
-            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size; i++) {
+            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size(); i++) {
                 assert_eq(tree[i], (tree[tree_lson_pos(i)] + tree[tree_rson_pos(i)]) MOD_BIL);
             }
         }
@@ -589,7 +566,7 @@ int main() {
             for(unsigned long long i=0; i<n; i++) {
                 tree_set(tree, i, i);
             }
-            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size; i++) {
+            for(unsigned long long i= tree_root_pos(); tree_rson_pos(i)<tree_size(); i++) {
                 assert_eq(tree[i], (tree[tree_lson_pos(i)] + tree[tree_rson_pos(i)]) MOD_BIL);
             }
         }
