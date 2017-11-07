@@ -17,6 +17,7 @@ static const tree_pos_t TREE_MAX_SIZE = 160000;
 static const tree_pos_t N_MAX_SIZE = 20000;
 
 // Helpers
+tree_pos_t &tree_size();
 tree_pos_t tree_root_pos();
 tree_pos_t tree_pos(tree_pos_t leaf_pos);
 tree_pos_t tree_parent_pos(tree_pos_t node_pos);
