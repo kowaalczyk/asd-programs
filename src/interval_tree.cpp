@@ -76,7 +76,6 @@ void tree_create(tree_val_t tree[], tree_pos_t leaves) {
     while(tree_size() <= 2*leaves) {
         tree_size() *= 2;
     }
-    tree_size() *= 2;
     tree_reset(tree);
 }
 
