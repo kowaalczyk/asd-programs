@@ -1,76 +1,218 @@
 #include <iostream>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
-
 
 typedef int tree_val_t;
 typedef int tree_pos_t;
 
-static const tree_pos_t TREE_MAX_SIZE = 800008; //TODO: Double-check
-static const tree_pos_t N_MAX_SIZE = 100001;
+// PROBLEM PARAMS --------------------------------------------------------------------------
+
 static const int MAX_ALLOWED_REVENUE = 2000000000;
 static const int MIN_ALLOWED_REVENUE = 0;
+
+// INTERVAL TREE PARAMS --------------------------------------------------------------------
+
+static const tree_pos_t TREE_MAX_SIZE = 800008; //TODO: Double-check
+static tree_pos_t tree_size;
 
 tree_val_t min_t[TREE_MAX_SIZE];
 tree_val_t max_t[TREE_MAX_SIZE];
 tree_val_t delta[TREE_MAX_SIZE];
-//bool calculated[TREE_MAX_SIZE];
+
+// INTERVAL TREE BASE -----------------------------------------------------------------------
+
+tree_pos_t tree_root_pos() {
+    return 1;
+}
+
+tree_pos_t tree_pos(tree_pos_t leaf_pos) {
+    return tree_size/2 + leaf_pos;
+}
+
+tree_pos_t tree_parent_pos(tree_pos_t node_pos) {
+    return node_pos/2;
+}
+
+tree_pos_t tree_lson_pos(tree_pos_t node_pos) {
+    return node_pos*2;
+}
+
+tree_pos_t tree_rson_pos(tree_pos_t node_pos) {
+    return 1 + node_pos*2;
+}
+
+void tree_print_debug(tree_val_t tree[]) {
+    tree_pos_t breaker = 1;
+    tree_pos_t counter = 0;
+
+    for(tree_pos_t i=1; i < tree_size; i++) {
+        cout << tree[i] << ' ';
+        counter++;
+        if(counter >= breaker) {
+            cout << endl;
+            breaker*=2;
+            counter = 0;
+        }
+    }
+}
+
+void tree_reset(tree_val_t tree[]) {
+    for(tree_pos_t i=0; i < TREE_MAX_SIZE; i++) {
+        tree[i] = 0;
+    }
+}
+
+void tree_create(tree_val_t tree[], tree_pos_t leaves) {
+    tree_size = 1;
+    while(tree_size <= 2*leaves) {
+        tree_size *= 2;
+    }
+    tree_reset(tree);
+}
+
+
+// INTERVAL TREE EXTENDED -------------------------------------------------------------------
+
+/**
+ * Calculates sum of values in nodes from pos to tree root (including pos and root)
+ * @param tree - tree from which values are summed up
+ * @param node_pos - starting position
+ * @return sum of values along the path from pos to root
+ */
+tree_val_t tree_sum_to_root(const tree_val_t tree[], tree_pos_t node_pos) {
+    tree_val_t ans = 0;
+    node_pos = tree_parent_pos(node_pos);
+    while(node_pos >= tree_root_pos()) {
+        ans += tree[node_pos];
+        node_pos = tree_parent_pos(node_pos);
+    }
+    return ans;
+}
+
+void tree_rebase_min(tree_val_t *tree, tree_pos_t node_pos) {
+    if(node_pos > 1) {
+        tree_pos_t parent_pos = tree_parent_pos(node_pos);
+        tree[parent_pos] = min(tree[tree_lson_pos(node_pos)], tree[tree_rson_pos(node_pos)]);
+        tree_rebase_min(tree, parent_pos);
+    }
+}
+
+void tree_rebase_max(tree_val_t *tree, tree_pos_t node_pos) {
+    if(node_pos > 1) {
+        tree_pos_t parent_pos = tree_parent_pos(node_pos);
+        tree[parent_pos] = min(tree[tree_lson_pos(node_pos)], tree[tree_rson_pos(node_pos)]);
+        tree_rebase_min(tree, parent_pos);
+    }
+}
 
 // ------------------------------------------------------------------------------------------
 
-
-
 int main() {
-    int n, m;
+    tree_pos_t n, m;
     cin >> n;
-    int rev[n+1]; // 0  is a guard (input data is indexed from 1)
-    for(int i=1; i<=n; i++) {
+    tree_val_t rev[n+1]; // 0  is a guard (input data is indexed from 1)
+    for(tree_pos_t i = 1; i <= n; i++) {
         cin >> rev[i];
     }
     cin >> m;
 
-    // TODO: Prepare state
-    // calculate growth periods in O(n)
+    // initialize interval trees
+    tree_create(delta, n);
+    tree_create(min_t, n);
+    tree_create(max_t, n);
+    for(tree_pos_t i = tree_pos(0); i < tree_size; i++) {
+        min_t[i] = rev[i];
+        tree_rebase_min(min_t, i);
+        max_t[i] = rev[i];
+        tree_rebase_max(max_t, i);
+    }
+
+    // calculate base growth periods in O(n)
+    tree_pos_t growth_periods = 0;
+    for(tree_pos_t i = 2; i <= n; i++) {
+        if(rev[i-1] < rev[i]) {
+            growth_periods++;
+        }
+    }
 
     for(int I=0; I<m; I++) {
         int current_l, current_r, current_delta;
         cin >> current_l >> current_r >> current_delta;
 
-        int ans = -1;right delta
+        // critical_points := minimal set of nodes in the tree covering interval [l,r] with their subtrees
+        vector<tree_val_t > critical_points;
 
-        bool too_much = false;
-        for(int i=current_l; i<=current_r; i++) {
-            // check if min-max are not violated
+        tree_pos_t left_pos = tree_pos(current_l-1);
+        tree_pos_t right_pos = tree_pos(current_r-1);
+        tree_pos_t prev_left_pos = 0; //not a position within a tree but always a valid tree_pos_t
+        tree_pos_t prev_right_pos = 0;
+        while(left_pos != right_pos) {
+            // calculate critical_points in O(log(n))
+            // NOTE: They cannot be higher than LCA(current_l, current_r)
+            if(tree_rson_pos(left_pos) == prev_left_pos) {
+                // if left_pos came from right son, mark that son as critical
+                critical_points.push_back(tree_rson_pos(left_pos));
+            }
+            if(tree_lson_pos(right_pos) == prev_right_pos) {
+                // if right_pos came from left son, mark that son as critical
+                critical_points.push_back(tree_lson_pos(right_pos));
+            }
+            prev_left_pos = left_pos;
+            prev_right_pos = right_pos;
+            left_pos = tree_parent_pos(left_pos);
+            right_pos = tree_parent_pos(right_pos);
+        } // left_pos == right_pos
+        if(critical_points.empty()) {
+            //means LCA(current_l, current_r is the only critical point
+            critical_points.push_back(left_pos);
+        }
 
-            if(rev[i] + current_delta > MAX_ALLOWED_REVENUE || rev[i] + current_delta < MIN_ALLOWED_REVENUE) {
-                too_much = true;
-                break;
+        //calculate updated rev values in critical points TODO: Use compares in loop instead of vectors
+        vector<tree_val_t> critical_min(critical_points.size());
+        vector<tree_val_t> critical_max(critical_points.size());
+        for(auto cp : critical_points) {
+            auto update_val = tree_sum_to_root(delta, cp);
+            critical_max.push_back(max_t[cp] + update_val);
+            critical_min.push_back(min_t[cp] + update_val);
+        }
+        auto interval_min = *min_element(critical_min.begin(), critical_min.end());
+        auto interval_max = *max_element(critical_max.begin(), critical_max.end());
+        if(interval_max + current_delta > MAX_ALLOWED_REVENUE || interval_min + current_delta < MIN_ALLOWED_REVENUE) {
+            //handle too big delta error
+            cout << -1 << endl;
+            continue;
+        }
+        // Update all critical points
+        for(auto cp : critical_points) {
+            delta[cp] += current_delta;
+        }
+
+        //check if delta affects growth_periods (only possible in rev[r] and rev[l+1])
+        if(current_l > 2) {
+            tree_val_t real_l = tree_sum_to_root(delta, tree_pos(current_l-1));
+            tree_val_t real_l_prev = real_l - current_delta;
+            tree_val_t real_l_left = tree_sum_to_root(delta, tree_pos(current_l-2));
+            if(real_l_prev > real_l_left && real_l < real_l_left) {
+                growth_periods--;
+            }
+            if(real_l_prev < real_l_left && real_l > real_l_left) {
+                growth_periods++;
             }
         }
-        if(!too_much) {
-            // calculate values for left and right edge and compare with previous growth periods #
-
-            // TODO
-            // calc left delta
-            // calc new left edge: bottom-up to LCA with updating subtree deltas
-            // compare new delta with old delta
-            // update growth periods #
-            // repeat for right edge -> TODO: Left and right edge have to run parallel to get to LCA in O(n)
-
-            for(int i=current_l; i<=current_r; i++) {
-                rev[i] += current_delta;
+        if(current_r < n) {
+            tree_val_t real_r = tree_sum_to_root(delta, tree_pos(current_r-1));
+            tree_val_t real_r_prev = real_r - current_delta;
+            tree_val_t real_r_right = tree_sum_to_root(delta, tree_pos(current_r));
+            if(real_r_prev > real_r_right && real_r < real_r_right) {
+                growth_periods++;
             }
-            ans = 0;
-            for(int i=2; i<=n; i++) {
-                if(rev[i] > rev[i-1]) {
-                    ans++;
-                }
+            if(real_r_prev < real_r_right && real_r > real_r_right) {
+                growth_periods--;
             }
         }
-        // return -1 if min-max violated
-
-        cout << ans << endl;
-
+        cout << growth_periods << endl;
     }
 
     return 0;
