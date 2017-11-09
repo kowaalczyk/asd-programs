@@ -143,7 +143,7 @@ int main() {
         cin >> current_l >> current_r >> current_delta;
 
         // critical_points := minimal set of nodes in the tree covering interval [l,r] with their subtrees
-        vector<tree_val_t > critical_points;
+        vector<tree_pos_t > critical_points;
 
         tree_pos_t left_pos = tree_pos(current_l-1);
         tree_pos_t right_pos = tree_pos(current_r-1);
@@ -159,6 +159,12 @@ int main() {
         while(left_pos != right_pos) {
             // calculate critical_points in O(log(n))
             // NOTE: They cannot be higher than LCA(current_l, current_r)
+            prev_left_pos = left_pos;
+            prev_right_pos = right_pos;
+            left_pos = tree_parent_pos(left_pos);
+            right_pos = tree_parent_pos(right_pos);
+            level_multiplier *= 2;
+
             if(tree_rson_pos(left_pos) == prev_left_pos) {
                 // left_pos moved to the left
                 tree_pos_t rson_l_range = left_pos_l_range;
@@ -193,11 +199,6 @@ int main() {
                     critical_points.push_back(tree_lson_pos(right_pos));
                 }
             }
-            prev_left_pos = left_pos;
-            prev_right_pos = right_pos;
-            left_pos = tree_parent_pos(left_pos);
-            right_pos = tree_parent_pos(right_pos);
-            level_multiplier *= 2;
         } // left_pos == right_pos
         if(critical_points.empty()) {
             //means LCA(current_l, current_r is the only critical point
@@ -223,8 +224,8 @@ int main() {
         for(auto cp : critical_points) {
             delta[cp] += current_delta;
             auto parent_pos = tree_parent_pos(cp);
-            auto lson_pos = tree_lson_pos(cp);
-            auto rson_pos = tree_rson_pos(cp);
+            auto lson_pos = tree_lson_pos(parent_pos);
+            auto rson_pos = tree_rson_pos(parent_pos);
             min_t[parent_pos] = min((min_t[lson_pos] + delta[lson_pos]), (min_t[rson_pos] + delta[rson_pos]));
             tree_rebase_min(min_t, parent_pos);
             max_t[parent_pos] = max((max_t[lson_pos] + delta[lson_pos]), (max_t[rson_pos] + delta[rson_pos]));
