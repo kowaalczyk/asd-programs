@@ -225,10 +225,10 @@ int main() {
         }
 
         //check if delta affects growth_periods (only possible in rev[r] and rev[l+1])
-        if(current_l > 2) {
-            tree_val_t real_l = tree_sum_to_root(delta, tree_pos(current_l-1));
+        if(current_l >= 2) {
+            tree_val_t real_l = rev[current_l] + tree_sum_to_root(delta, tree_pos(current_l-1));
             tree_val_t real_l_prev = real_l - current_delta;
-            tree_val_t real_l_left = tree_sum_to_root(delta, tree_pos(current_l-2));
+            tree_val_t real_l_left = rev[current_l-1] + tree_sum_to_root(delta, tree_pos(current_l-2));
             if(real_l_prev > real_l_left && real_l < real_l_left) {
                 growth_periods--;
             }
@@ -236,10 +236,10 @@ int main() {
                 growth_periods++;
             }
         }
-        if(current_r < n) {
-            tree_val_t real_r = tree_sum_to_root(delta, tree_pos(current_r-1));
+        if(current_r <= n-1) {
+            tree_val_t real_r = rev[current_r] + tree_sum_to_root(delta, tree_pos(current_r-1));
             tree_val_t real_r_prev = real_r - current_delta;
-            tree_val_t real_r_right = tree_sum_to_root(delta, tree_pos(current_r));
+            tree_val_t real_r_right = rev[current_r+1] + tree_sum_to_root(delta, tree_pos(current_r));
             if(real_r_prev > real_r_right && real_r < real_r_right) {
                 growth_periods++;
             }
