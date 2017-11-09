@@ -163,34 +163,34 @@ int main() {
                 // left_pos moved to the left
                 tree_pos_t rson_l_range = left_pos_l_range;
                 left_pos_l_range -= level_multiplier/2;
-                if(rson_l_range >= current_l-1 && left_pos_l_range < current_l-1) {
+                if(rson_l_range >= tree_pos(current_l-1) && left_pos_l_range < tree_pos(current_l-1)) {
                     //moved outside of interval, mark as critical point
-                    critical_points.push_back(left_pos);
+                    critical_points.push_back(tree_rson_pos(left_pos));
                 }
             } else {
                 // left_pos moved to the right
                 tree_pos_t rson_l_range = left_pos_r_range+1;
                 left_pos_r_range += level_multiplier/2;
-                if(rson_l_range >= current_l-1 && left_pos_l_range < current_l-1) {
+                if(rson_l_range >= tree_pos(current_l-1) && left_pos_l_range < tree_pos(current_l-1)) {
                     //moved outside of interval, mark as critical point
-                    critical_points.push_back(left_pos);
+                    critical_points.push_back(tree_rson_pos(left_pos));
                 }
             }
             if(tree_rson_pos(right_pos) == prev_right_pos) {
                 // right_pos moved to the left
                 tree_pos_t lson_r_range = right_pos_l_range-1;
                 right_pos_l_range -= level_multiplier/2;
-                if(lson_r_range <= current_r-1 && right_pos_r_range > current_r-1) {
+                if(lson_r_range <= tree_pos(current_r-1) && right_pos_r_range > tree_pos(current_r-1)) {
                     //moved outside of interval, mark as critical point
-                    critical_points.push_back(right_pos);
+                    critical_points.push_back(tree_lson_pos(right_pos));
                 }
             } else {
                 // right_pos moved to the right
                 tree_pos_t lson_r_range = right_pos_r_range;
                 right_pos_r_range += level_multiplier/2;
-                if(lson_r_range <= current_r-1 && right_pos_r_range > current_r-1) {
+                if(lson_r_range <= tree_pos(current_r-1) && right_pos_r_range > tree_pos(current_r-1)) {
                     //moved outside of interval, mark as critical point
-                    critical_points.push_back(left_pos);
+                    critical_points.push_back(tree_lson_pos(right_pos));
                 }
             }
             prev_left_pos = left_pos;
@@ -219,9 +219,16 @@ int main() {
             cout << -1 << endl;
             continue;
         }
-        // Update all critical points
+        // Update deltas in critical points and min/max in their parents (for correct comparison in future iterations)
         for(auto cp : critical_points) {
             delta[cp] += current_delta;
+            auto parent_pos = tree_parent_pos(cp);
+            auto lson_pos = tree_lson_pos(cp);
+            auto rson_pos = tree_rson_pos(cp);
+            min_t[parent_pos] = min((min_t[lson_pos] + delta[lson_pos]), (min_t[rson_pos] + delta[rson_pos]));
+            tree_rebase_min(min_t, parent_pos);
+            max_t[parent_pos] = max((max_t[lson_pos] + delta[lson_pos]), (max_t[rson_pos] + delta[rson_pos]));
+            tree_rebase_max(max_t, parent_pos);
         }
 
         //check if delta affects growth_periods (only possible in rev[r] and rev[l+1])
