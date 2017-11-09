@@ -1,10 +1,11 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <climits>
 
 using namespace std;
 
-typedef int tree_val_t;
+typedef long long tree_val_t;
 typedef int tree_pos_t;
 
 // PROBLEM PARAMS --------------------------------------------------------------------------
@@ -58,18 +59,18 @@ void tree_print_debug(tree_val_t tree[]) {
     }
 }
 
-void tree_reset(tree_val_t tree[]) {
+void tree_reset(tree_val_t tree[], tree_val_t base_value=0) {
     for(tree_pos_t i=0; i < TREE_MAX_SIZE; i++) {
-        tree[i] = 0;
+        tree[i] = base_value;
     }
 }
 
-void tree_create(tree_val_t tree[], tree_pos_t leaves) {
+void tree_create(tree_val_t tree[], tree_pos_t leaves, tree_val_t base_value=0) {
     tree_size = 1;
     while(tree_size <= 2*leaves) {
         tree_size *= 2;
     }
-    tree_reset(tree);
+    tree_reset(tree, base_value);
 }
 
 
@@ -83,7 +84,6 @@ void tree_create(tree_val_t tree[], tree_pos_t leaves) {
  */
 tree_val_t tree_sum_to_root(const tree_val_t tree[], tree_pos_t node_pos) {
     tree_val_t ans = 0;
-//    node_pos = tree_parent_pos(node_pos);
     while(node_pos >= tree_root_pos()) {
         ans += tree[node_pos];
         node_pos = tree_parent_pos(node_pos);
@@ -120,8 +120,8 @@ int main() {
 
     // initialize interval trees
     tree_create(delta, n);
-    tree_create(min_t, n);
-    tree_create(max_t, n);
+    tree_create(min_t, n, LLONG_MAX);
+    tree_create(max_t, n, LLONG_MIN);
     for(tree_pos_t i = 1; i <= n; i++) {
         tree_pos_t leaf = tree_pos(i-1);
         min_t[leaf] = rev[i];
@@ -229,10 +229,10 @@ int main() {
             tree_val_t real_l = rev[current_l] + tree_sum_to_root(delta, tree_pos(current_l-1));
             tree_val_t real_l_prev = real_l - current_delta;
             tree_val_t real_l_left = rev[current_l-1] + tree_sum_to_root(delta, tree_pos(current_l-2));
-            if(real_l_prev > real_l_left && real_l < real_l_left) {
+            if(real_l_prev > real_l_left && real_l <= real_l_left) {
                 growth_periods--;
             }
-            if(real_l_prev < real_l_left && real_l > real_l_left) {
+            if(real_l_prev <= real_l_left && real_l > real_l_left) {
                 growth_periods++;
             }
         }
@@ -240,10 +240,10 @@ int main() {
             tree_val_t real_r = rev[current_r] + tree_sum_to_root(delta, tree_pos(current_r-1));
             tree_val_t real_r_prev = real_r - current_delta;
             tree_val_t real_r_right = rev[current_r+1] + tree_sum_to_root(delta, tree_pos(current_r));
-            if(real_r_prev > real_r_right && real_r < real_r_right) {
+            if(real_r_prev >= real_r_right && real_r < real_r_right) {
                 growth_periods++;
             }
-            if(real_r_prev < real_r_right && real_r > real_r_right) {
+            if(real_r_prev < real_r_right && real_r >= real_r_right) {
                 growth_periods--;
             }
         }
