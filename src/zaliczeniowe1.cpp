@@ -83,7 +83,7 @@ void tree_create(tree_val_t tree[], tree_pos_t leaves) {
  */
 tree_val_t tree_sum_to_root(const tree_val_t tree[], tree_pos_t node_pos) {
     tree_val_t ans = 0;
-    node_pos = tree_parent_pos(node_pos);
+//    node_pos = tree_parent_pos(node_pos);
     while(node_pos >= tree_root_pos()) {
         ans += tree[node_pos];
         node_pos = tree_parent_pos(node_pos);
@@ -91,19 +91,19 @@ tree_val_t tree_sum_to_root(const tree_val_t tree[], tree_pos_t node_pos) {
     return ans;
 }
 
-void tree_rebase_min(tree_val_t *tree, tree_pos_t node_pos) {
+void tree_rebase_min(tree_val_t tree[], tree_pos_t node_pos) {
     if(node_pos > 1) {
         tree_pos_t parent_pos = tree_parent_pos(node_pos);
-        tree[parent_pos] = min(tree[tree_lson_pos(node_pos)], tree[tree_rson_pos(node_pos)]);
+        tree[parent_pos] = min(tree[tree_lson_pos(parent_pos)], tree[tree_rson_pos(parent_pos)]);
         tree_rebase_min(tree, parent_pos);
     }
 }
 
-void tree_rebase_max(tree_val_t *tree, tree_pos_t node_pos) {
+void tree_rebase_max(tree_val_t tree[], tree_pos_t node_pos) {
     if(node_pos > 1) {
         tree_pos_t parent_pos = tree_parent_pos(node_pos);
-        tree[parent_pos] = min(tree[tree_lson_pos(node_pos)], tree[tree_rson_pos(node_pos)]);
-        tree_rebase_min(tree, parent_pos);
+        tree[parent_pos] = max(tree[tree_lson_pos(parent_pos)], tree[tree_rson_pos(parent_pos)]);
+        tree_rebase_max(tree, parent_pos);
     }
 }
 
@@ -122,11 +122,12 @@ int main() {
     tree_create(delta, n);
     tree_create(min_t, n);
     tree_create(max_t, n);
-    for(tree_pos_t i = tree_pos(0); i < tree_size; i++) {
-        min_t[i] = rev[i];
-        tree_rebase_min(min_t, i);
-        max_t[i] = rev[i];
-        tree_rebase_max(max_t, i);
+    for(tree_pos_t i = 1; i <= n; i++) {
+        tree_pos_t leaf = tree_pos(i-1);
+        min_t[leaf] = rev[i];
+        tree_rebase_min(min_t, leaf);
+        max_t[leaf] = rev[i];
+        tree_rebase_max(max_t, leaf);
     }
 
     // calculate base growth periods in O(n)
@@ -148,21 +149,55 @@ int main() {
         tree_pos_t right_pos = tree_pos(current_r-1);
         tree_pos_t prev_left_pos = 0; //not a position within a tree but always a valid tree_pos_t
         tree_pos_t prev_right_pos = 0;
+
+        tree_pos_t left_pos_l_range = left_pos;
+        tree_pos_t left_pos_r_range = left_pos;
+        tree_pos_t right_pos_l_range = right_pos;
+        tree_pos_t right_pos_r_range = right_pos;
+
+        tree_pos_t level_multiplier = 1;
         while(left_pos != right_pos) {
             // calculate critical_points in O(log(n))
             // NOTE: They cannot be higher than LCA(current_l, current_r)
             if(tree_rson_pos(left_pos) == prev_left_pos) {
-                // if left_pos came from right son, mark that son as critical
-                critical_points.push_back(tree_rson_pos(left_pos));
+                // left_pos moved to the left
+                tree_pos_t rson_l_range = left_pos_l_range;
+                left_pos_l_range -= level_multiplier/2;
+                if(rson_l_range >= current_l-1 && left_pos_l_range < current_l-1) {
+                    //moved outside of interval, mark as critical point
+                    critical_points.push_back(left_pos);
+                }
+            } else {
+                // left_pos moved to the right
+                tree_pos_t rson_l_range = left_pos_r_range+1;
+                left_pos_r_range += level_multiplier/2;
+                if(rson_l_range >= current_l-1 && left_pos_l_range < current_l-1) {
+                    //moved outside of interval, mark as critical point
+                    critical_points.push_back(left_pos);
+                }
             }
-            if(tree_lson_pos(right_pos) == prev_right_pos) {
-                // if right_pos came from left son, mark that son as critical
-                critical_points.push_back(tree_lson_pos(right_pos));
+            if(tree_rson_pos(right_pos) == prev_right_pos) {
+                // right_pos moved to the left
+                tree_pos_t lson_r_range = right_pos_l_range-1;
+                right_pos_l_range -= level_multiplier/2;
+                if(lson_r_range <= current_r-1 && right_pos_r_range > current_r-1) {
+                    //moved outside of interval, mark as critical point
+                    critical_points.push_back(right_pos);
+                }
+            } else {
+                // right_pos moved to the right
+                tree_pos_t lson_r_range = right_pos_r_range;
+                right_pos_r_range += level_multiplier/2;
+                if(lson_r_range <= current_r-1 && right_pos_r_range > current_r-1) {
+                    //moved outside of interval, mark as critical point
+                    critical_points.push_back(left_pos);
+                }
             }
             prev_left_pos = left_pos;
             prev_right_pos = right_pos;
             left_pos = tree_parent_pos(left_pos);
             right_pos = tree_parent_pos(right_pos);
+            level_multiplier *= 2;
         } // left_pos == right_pos
         if(critical_points.empty()) {
             //means LCA(current_l, current_r is the only critical point
@@ -170,8 +205,8 @@ int main() {
         }
 
         //calculate updated rev values in critical points TODO: Use compares in loop instead of vectors
-        vector<tree_val_t> critical_min(critical_points.size());
-        vector<tree_val_t> critical_max(critical_points.size());
+        vector<tree_val_t> critical_min;
+        vector<tree_val_t> critical_max;
         for(auto cp : critical_points) {
             auto update_val = tree_sum_to_root(delta, cp);
             critical_max.push_back(max_t[cp] + update_val);
