@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
+set (PARK_BITOWY src/park-bitowy.cpp)
 set (ZALICZENIOWE_1 src/zaliczeniowe1.cpp)
 set (INT_TREE_IMPL src/interval_tree.cpp)
 set (TEST_INT_TREE src/interval-tree-tests.cpp src/interval_tree.h src/interval_tree.cpp)
@@ -14,6 +15,7 @@ set (VAR_SIZE src/var-size.c)
 set(CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wall")
 
+add_executable(park_bitowy ${PARK_BITOWY})
 add_executable(zaliczeniowe1 ${ZALICZENIOWE_1})
 add_executable(malowanie-autostrady ${MAL_AUTO})
 add_executable(k-inwersje ${KINWERSJE})
