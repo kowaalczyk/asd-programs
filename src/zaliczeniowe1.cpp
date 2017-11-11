@@ -203,17 +203,124 @@ vector<tree_pos_t> tree_critical_pts(tree_pos_t left_leaf, tree_pos_t right_leaf
     return ans;
 }
 
-bool minmax_violated(tree_val_t current_delta, vector<tree_pos_t> critical_points) {
-    vector<tree_val_t> critical_min;
-    vector<tree_val_t> critical_max;
-    for(auto cp : critical_points) {
-        auto update_val = tree_sum_to_root(delta, cp);
-        critical_max.push_back(max_t[cp] + update_val);
-        critical_min.push_back(min_t[cp] + update_val);
+//bool minmax_violated_recursive(tree_val_t current_delta, vector<tree_pos_t> critical_points) {
+//    vector<tree_val_t> critical_min;
+//    vector<tree_val_t> critical_max;
+//    for(auto cp : critical_points) {
+//        auto update_val = tree_sum_to_root(delta, cp);
+//        critical_max.push_back(max_t[cp] + update_val);
+//        critical_min.push_back(min_t[cp] + update_val);
+//    }
+//    auto interval_min = *min_element(critical_min.begin(), critical_min.end());
+//    auto interval_max = *max_element(critical_max.begin(), critical_max.end());
+//    return (interval_max + current_delta > MAX_ALLOWED_REVENUE || interval_min + current_delta < MIN_ALLOWED_REVENUE);
+//}
+
+// NEW IMPLEMENTATION OF TREE ---------------------------------------------------------------
+
+bool minmax_violated_recursive(
+        tree_pos_t current_pos,
+        tree_pos_t current_left_bound,
+        tree_pos_t current_right_bound,
+        tree_pos_t left_bound,
+        tree_pos_t right_bound,
+        tree_val_t val) {
+    if(delta[current_pos]) {
+        // update current_pos if it needs to be updated
+        min_t[current_pos] += delta[current_pos];
+        max_t[current_pos] += delta[current_pos];
+        if(current_left_bound != current_right_bound) {
+            delta[tree_lson_pos(current_pos)] += delta[current_pos];
+            delta[tree_rson_pos(current_pos)] += delta[current_pos];
+        }
+        delta[current_pos] = 0;
     }
-    auto interval_min = *min_element(critical_min.begin(), critical_min.end());
-    auto interval_max = *max_element(critical_max.begin(), critical_max.end());
-    return (interval_max + current_delta > MAX_ALLOWED_REVENUE || interval_min + current_delta < MIN_ALLOWED_REVENUE);
+    if(current_left_bound > current_right_bound || current_left_bound > right_bound || current_right_bound < left_bound) {
+        // totally not where we want to be
+        return false;
+    }
+    if(current_left_bound >= left_bound && current_right_bound <= right_bound) {
+        tree_val_t calc_min = min_t[current_pos] + val;
+        tree_val_t calc_max = max_t[current_pos] + val;
+        return (calc_min < MIN_ALLOWED_REVENUE || calc_max > MAX_ALLOWED_REVENUE);
+    }
+    tree_pos_t mid = (current_left_bound + current_right_bound) / 2;
+    bool ans = minmax_violated_recursive(tree_lson_pos(current_pos), current_left_bound, mid, left_bound, right_bound,
+                                         val);
+    ans = ans || minmax_violated_recursive(tree_rson_pos(current_pos), mid+1, current_right_bound, left_bound, right_bound, val);
+
+    return ans;
+}
+
+bool minmax_violated(tree_pos_t l, tree_pos_t r, tree_val_t val) {
+    return minmax_violated_recursive(tree_root_pos(), tree_pos(0), tree_size-1, tree_pos(l-1), tree_pos(r-1), val);
+}
+
+tree_val_t update_minmax_recursive(
+        tree_pos_t current_pos,
+        tree_pos_t current_left_bound,
+        tree_pos_t current_right_bound,
+        tree_pos_t left_bound,
+        tree_pos_t right_bound,
+        tree_val_t val) {
+    if(delta[current_pos]) {
+        // update current_pos if it needs to be updated
+        min_t[current_pos] += delta[current_pos];
+        max_t[current_pos] += delta[current_pos];
+        if(current_left_bound != current_right_bound) {
+            delta[tree_lson_pos(current_pos)] += delta[current_pos];
+            delta[tree_rson_pos(current_pos)] += delta[current_pos];
+        }
+        delta[current_pos] = 0;
+    }
+    if(current_left_bound > current_right_bound || current_left_bound > right_bound || current_right_bound < left_bound) {
+        // totally not where we want to be
+        return 0;
+    }
+    if(current_left_bound >= left_bound && current_right_bound <= right_bound) {
+        // representing change of all leaves in interval by val by changing min and max in critical points
+        tree_val_t growth_delta = 0;
+        min_t[current_pos] += val;
+        max_t[current_pos] += val;
+        if(current_left_bound != current_right_bound) {
+            // not a leaf
+            delta[tree_lson_pos(current_pos)] += val;
+            delta[tree_rson_pos(current_pos)] += val;
+        } else {
+            // a leaf => check if difference between previous/following rev value changed sign
+            tree_val_t prev_val = min_t[current_pos] - val;
+            tree_val_t new_val = min_t[current_pos];
+            if(current_pos == left_bound && current_pos > tree_pos(0)) {
+                tree_val_t left_val = min_t[current_pos-1];
+                if(left_val < prev_val && left_val >= new_val) {
+                    growth_delta--;
+                } else if(left_val >= prev_val && left_val < new_val) {
+                    growth_delta++;
+                }
+            }
+            if(current_pos == right_bound && current_pos < tree_size-2) {
+                tree_val_t right_val = min_t[current_pos+1];
+                if(prev_val < right_val && new_val >= right_val) {
+                    growth_delta--;
+                } else if(prev_val >= right_val && new_val < right_val) {
+                    growth_delta++;
+                }
+            }
+        }
+        return growth_delta;
+    }
+    tree_pos_t mid = (current_left_bound + current_right_bound) / 2;
+    tree_val_t growth_delta = update_minmax_recursive(tree_lson_pos(current_pos), current_left_bound, mid, left_bound, right_bound, val);
+    growth_delta += update_minmax_recursive(tree_rson_pos(current_pos), mid+1, current_right_bound, left_bound, right_bound, val);
+
+    min_t[current_pos] = min(min_t[tree_lson_pos(current_pos)], min_t[tree_rson_pos(current_pos)]);
+    max_t[current_pos] = max(max_t[tree_lson_pos(current_pos)], max_t[tree_rson_pos(current_pos)]);
+
+    return growth_delta;
+}
+
+tree_val_t update_minmax(tree_pos_t l, tree_pos_t r, tree_val_t val) {
+    return update_minmax_recursive(tree_root_pos(), tree_pos(0), tree_size-1, tree_pos(l-1), tree_pos(r-1), val);
 }
 
 // ------------------------------------------------------------------------------------------
@@ -248,43 +355,51 @@ int main() {
     }
 
     for(int I=0; I<m; I++) {
-        int current_l, current_r, current_delta;
+        tree_pos_t current_l, current_r;
+        tree_val_t current_delta;
         cin >> current_l >> current_r >> current_delta;
 
-        vector<tree_pos_t > critical_points = tree_critical_pts(current_l-1, current_r-1);
-        if(minmax_violated(current_delta, critical_points)) {
+//        vector<tree_pos_t > critical_points = tree_critical_pts(current_l-1, current_r-1);
+//        if(minmax_violated_recursive(current_delta, critical_points)) {
+//            cout << -1 << endl;
+//            continue;
+//        }
+        if(minmax_violated(current_l, current_r, current_delta)) {
             cout << -1 << endl;
             continue;
         }
+        tree_val_t growth_changes = update_minmax(current_l, current_r, current_delta);
+        growth_periods += growth_changes;
         // Update deltas in critical points and min/max in their parents (for correct comparison in future iterations)
-        for(auto cp : critical_points) {
-            delta[cp] += current_delta;
-            tree_rebase_min(min_t, delta, cp);
-            tree_rebase_max(max_t, delta, cp);
-        }
-        //check if delta affects growth_periods (only possible in rev[r] and rev[l+1]) TODO: Move to separate function
-        if(current_l >= 2) {
-            tree_val_t real_l = rev[current_l] + tree_sum_to_root(delta, tree_pos(current_l-1));
-            tree_val_t real_l_prev = real_l - current_delta;
-            tree_val_t real_l_left = rev[current_l-1] + tree_sum_to_root(delta, tree_pos(current_l-2));
-            if(real_l_prev > real_l_left && real_l <= real_l_left) {
-                growth_periods--;
-            }
-            if(real_l_prev <= real_l_left && real_l > real_l_left) {
-                growth_periods++;
-            }
-        }
-        if(current_r <= n-1) {
-            tree_val_t real_r = rev[current_r] + tree_sum_to_root(delta, tree_pos(current_r-1));
-            tree_val_t real_r_prev = real_r - current_delta;
-            tree_val_t real_r_right = rev[current_r+1] + tree_sum_to_root(delta, tree_pos(current_r));
-            if(real_r_prev >= real_r_right && real_r < real_r_right) {
-                growth_periods++;
-            }
-            if(real_r_prev < real_r_right && real_r >= real_r_right) {
-                growth_periods--;
-            }
-        }
+//        for(auto cp : critical_points) {
+//            delta[cp] += current_delta;
+//            tree_rebase_min(min_t, delta, cp);
+//            tree_rebase_max(max_t, delta, cp);
+//        }
+        //check if delta affects growth_periods (only possible in rev[r] and rev[l+1])
+        //TODO: Move to separate function + this needs to be read from critical pts
+//        if(current_l >= 2) {
+//            tree_val_t real_l = rev[current_l] + tree_sum_to_root(delta, tree_pos(current_l-1));
+//            tree_val_t real_l_prev = real_l - current_delta;
+//            tree_val_t real_l_left = rev[current_l-1] + tree_sum_to_root(delta, tree_pos(current_l-2));
+//            if(real_l_prev > real_l_left && real_l <= real_l_left) {
+//                growth_periods--;
+//            }
+//            if(real_l_prev <= real_l_left && real_l > real_l_left) {
+//                growth_periods++;
+//            }
+//        }
+//        if(current_r <= n-1) {
+//            tree_val_t real_r = rev[current_r] + tree_sum_to_root(delta, tree_pos(current_r-1));
+//            tree_val_t real_r_prev = real_r - current_delta;
+//            tree_val_t real_r_right = rev[current_r+1] + tree_sum_to_root(delta, tree_pos(current_r));
+//            if(real_r_prev >= real_r_right && real_r < real_r_right) {
+//                growth_periods++;
+//            }
+//            if(real_r_prev < real_r_right && real_r >= real_r_right) {
+//                growth_periods--;
+//            }
+//        }
         cout << growth_periods << endl;
     }
 
