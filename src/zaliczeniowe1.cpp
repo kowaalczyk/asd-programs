@@ -121,17 +121,20 @@ bool minmax_violated_recursive(
         tree_pos_t right_bound,
         tree_val_t val) {
     update_if_delta_present(current_pos, current_left_bound, current_right_bound);
+    assert(delta[current_pos] == 0);
     if(current_left_bound > current_right_bound || current_left_bound > right_bound || current_right_bound < left_bound) {
         return false;
     }
     if(current_left_bound >= left_bound && current_right_bound <= right_bound) {
         tree_val_t calc_min = min_t[current_pos] + val;
         tree_val_t calc_max = max_t[current_pos] + val;
+        assert(delta[current_pos] == 0);
         return (calc_min < MIN_ALLOWED_REVENUE || calc_max > MAX_ALLOWED_REVENUE);
     }
     tree_pos_t divider = (current_left_bound + current_right_bound) / 2;
     bool ans = minmax_violated_recursive(tree_lson_pos(current_pos), current_left_bound, divider, left_bound, right_bound, val);
     ans = ans || minmax_violated_recursive(tree_rson_pos(current_pos), divider+1, current_right_bound, left_bound, right_bound, val);
+    assert(delta[current_pos] == 0);
     return ans;
 }
 
@@ -149,6 +152,7 @@ void update_minmax_recursive(
         tree_pos_t right_bound,
         tree_val_t val) {
     update_if_delta_present(current_pos, current_left_bound, current_right_bound);
+    assert(delta[current_pos] == 0);
     if(current_left_bound > current_right_bound || current_left_bound > right_bound || current_right_bound < left_bound) {
         return;
     }
@@ -161,11 +165,15 @@ void update_minmax_recursive(
             delta[tree_lson_pos(current_pos)] += val;
             delta[tree_rson_pos(current_pos)] += val;
         }
+        assert(delta[current_pos] == 0);
         return;
     }
     tree_pos_t divider = (current_left_bound + current_right_bound) / 2;
+    update_minmax_recursive(tree_lson_pos(current_pos), current_left_bound, divider, left_bound, right_bound, val);
+    update_minmax_recursive(tree_rson_pos(current_pos), divider+1, current_right_bound, left_bound, right_bound, val);
     min_t[current_pos] = min(min_t[tree_lson_pos(current_pos)], min_t[tree_rson_pos(current_pos)]);
     max_t[current_pos] = max(max_t[tree_lson_pos(current_pos)], max_t[tree_rson_pos(current_pos)]);
+    assert(delta[current_pos] == 0);
 }
 
 /// updates min_t and max_t wiht val
@@ -177,7 +185,7 @@ void update_minmax(tree_pos_t l, tree_pos_t r, tree_val_t val) {
 tree_val_t update_leaf_values(const tree_pos_t leaf_pos[], tree_pos_t count) {
     //iterating though each individual element makes sure that top-down tree search reaches bottom
     for(tree_pos_t i=0; i<count; i++) {
-        update_minmax(i, i, 0);
+        update_minmax(leaf_pos[i], leaf_pos[i], 0);
     }
 }
 
@@ -185,12 +193,12 @@ tree_val_t update_leaf_values(const tree_pos_t leaf_pos[], tree_pos_t count) {
 tree_val_t calc_growth_changes(tree_pos_t l, tree_pos_t r, tree_pos_t rev_size, tree_val_t updated_val) {
     tree_val_t ans = 0;
     if(l>1) {
-        tree_pos_t els[2] = {tree_pos(l-2), tree_pos(l-1)};
+        tree_pos_t els[2] = {l-1, l};
         update_leaf_values(els, 2);
 
-        tree_val_t prev_val = min_t[els[1]] - updated_val;
-        tree_val_t new_val = min_t[els[1]];
-        tree_val_t left_val = min_t[els[0]];
+        tree_val_t prev_val = min_t[tree_pos(l-1)] - updated_val;
+        tree_val_t new_val = min_t[tree_pos(l-1)];
+        tree_val_t left_val = min_t[tree_pos(l-2)];
         if(left_val < prev_val && left_val >= new_val) {
             ans--;
         } else if(left_val >= prev_val && left_val < new_val) {
@@ -198,12 +206,12 @@ tree_val_t calc_growth_changes(tree_pos_t l, tree_pos_t r, tree_pos_t rev_size, 
         }
     }
     if(r<rev_size) {
-        tree_pos_t els[2] = {tree_pos(r-1), tree_pos(r)};
+        tree_pos_t els[2] = {r, r+1};
         update_leaf_values(els, 2);
 
-        tree_val_t prev_val = min_t[els[0]] - updated_val;
-        tree_val_t new_val = min_t[els[0]];
-        tree_val_t right_val = min_t[els[1]];
+        tree_val_t prev_val = min_t[tree_pos(r-1)] - updated_val;
+        tree_val_t new_val = min_t[tree_pos(r-1)];
+        tree_val_t right_val = min_t[tree_pos(r)];
         if(prev_val < right_val && new_val >= right_val) {
             ans--;
         } else if(prev_val >= right_val && new_val < right_val) {
