@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include <climits>
+#include <assert.h>
 
 using namespace std;
 
@@ -95,7 +96,7 @@ void tree_rebase_max(tree_val_t max_t[], tree_val_t delta_t[], tree_pos_t node_p
     }
 }
 
-void set_minmax(tree_val_t rev[], tree_pos_t rev_size) {
+void set_minmax(const tree_val_t rev[], tree_pos_t rev_size) {
     for(tree_pos_t i = 1; i <= rev_size; i++) {
         tree_pos_t leaf = tree_pos(i-1);
         min_t[leaf] = rev[i];
@@ -127,7 +128,6 @@ bool minmax_violated_recursive(
         tree_val_t val) {
     update_if_delta_present(current_pos, current_left_bound, current_right_bound);
     if(current_left_bound > current_right_bound || current_left_bound > right_bound || current_right_bound < left_bound) {
-        // totally not where we want to be
         return false;
     }
     if(current_left_bound >= left_bound && current_right_bound <= right_bound) {
@@ -154,7 +154,6 @@ tree_val_t update_minmax_recursive(
         tree_val_t val) {
     update_if_delta_present(current_pos, current_left_bound, current_right_bound);
     if(current_left_bound > current_right_bound || current_left_bound > right_bound || current_right_bound < left_bound) {
-        // totally not where we want to be
         return 0;
     }
     if(current_left_bound >= left_bound && current_right_bound <= right_bound) {
@@ -203,9 +202,47 @@ tree_val_t update_minmax(tree_pos_t l, tree_pos_t r, tree_val_t val) {
     return update_minmax_recursive(tree_root_pos(), tree_pos(0), tree_size-1, tree_pos(l-1), tree_pos(r-1), val);
 }
 
+tree_val_t update_leaf_values(const tree_pos_t leaf_pos[], tree_pos_t count) {
+    //iterating though each individual element makes sure that top-down tree search reaches bottom
+    for(tree_pos_t i=0; i<count; i++) {
+        update_minmax(i, i, 0);
+    }
+}
+
+tree_val_t calc_growth_changes(tree_pos_t l, tree_pos_t r, tree_pos_t rev_size, tree_val_t updated_val) {
+    tree_val_t ans = 0;
+    if(l>1) {
+        tree_pos_t els[2] = {tree_pos(l-2), tree_pos(l-1)};
+        update_leaf_values(els, 2);
+
+        tree_val_t prev_val = min_t[els[1]] - updated_val;
+        tree_val_t new_val = min_t[els[1]];
+        tree_val_t left_val = min_t[els[0]];
+        if(left_val < prev_val && left_val >= new_val) {
+            ans--;
+        } else if(left_val >= prev_val && left_val < new_val) {
+            ans++;
+        }
+    }
+    if(r<rev_size) {
+        tree_pos_t els[2] = {tree_pos(r-1), tree_pos(r)};
+        update_leaf_values(els, 2);
+
+        tree_val_t prev_val = min_t[els[0]] - updated_val;
+        tree_val_t new_val = min_t[els[0]];
+        tree_val_t right_val = min_t[els[1]];
+        if(prev_val < right_val && new_val >= right_val) {
+            ans--;
+        } else if(prev_val >= right_val && new_val < right_val) {
+            ans++;
+        }
+    }
+    return ans;
+}
+
 // HELPERS ----------------------------------------------------------------------------------
 
-tree_pos_t calc_growth_periods(tree_val_t rev[], tree_pos_t rev_size) {
+tree_pos_t base_growth_periods(const tree_val_t rev[], tree_pos_t rev_size) {
     tree_pos_t ans = 0;
     for(tree_pos_t i = 2; i <= rev_size; i++) {
         if(rev[i-1] < rev[i]) {
@@ -230,7 +267,7 @@ int main() {
     tree_create(min_t, n, LLONG_MAX);
     tree_create(max_t, n, LLONG_MIN);
     set_minmax(rev, n);
-    tree_pos_t growth_periods = calc_growth_periods(rev, n);
+    tree_pos_t growth_periods = base_growth_periods(rev, n);
 
     for(tree_pos_t i=0; i<m; i++) {
         tree_pos_t current_l, current_r;
@@ -240,8 +277,8 @@ int main() {
         if(minmax_violated(current_l, current_r, current_delta)) {
             cout << -1 << endl;
         } else {
-            tree_val_t growth_changes = update_minmax(current_l, current_r, current_delta);
-            growth_periods += growth_changes;
+            update_minmax(current_l, current_r, current_delta);
+            growth_periods += calc_growth_changes(current_l, current_r, n, current_delta);
             cout << growth_periods << endl;
         }
     }
