@@ -1,6 +1,5 @@
 #include <iostream>
-#include <cmath>
-#include <cassert>
+#include <assert.h>
 
 using namespace std;
 
@@ -38,115 +37,160 @@ using namespace std;
  * Inicjujemy korzeń na czarny-0
  */
 
-enum state{
-    BLACK = 0,
-    WHITE = 1,
-    UNKNOWN = 2
-};
 
-unsigned int tree[2000000];
-state tree_state[2000000];
-unsigned int tree_size;
+typedef long long tree_val_t;
+typedef int tree_pos_t;
 
-// tree helpers
-void debug_print_tree() {
-//    comment-out for debugging:
-//    return;
+const tree_val_t black = 0;
+const tree_val_t white = 1;
+const tree_val_t unknown = 2;
 
-    unsigned int breaker = 0;
-    unsigned int counter = 0;
+// PROBLEM PARAMS --------------------------------------------------------------------------
 
-    for(unsigned int i=1; i< tree_size; i++) {
+
+// INTERVAL TREE PARAMS --------------------------------------------------------------------
+
+static const tree_pos_t TREE_MAX_SIZE = 2097152; // == 2^21
+static tree_pos_t tree_size;
+
+tree_val_t state[TREE_MAX_SIZE];
+tree_val_t exact_count[TREE_MAX_SIZE];
+
+// INTERVAL TREE BASE -----------------------------------------------------------------------
+
+tree_pos_t tree_root_pos() {
+    return 1;
+}
+
+tree_pos_t tree_first_leaf_pos() {
+    return tree_size/2;
+}
+
+tree_pos_t tree_pos(tree_pos_t leaf_pos) {
+    return tree_first_leaf_pos() + leaf_pos;
+}
+
+tree_pos_t tree_last_leaf_pos() {
+    return tree_size-1;
+}
+
+tree_pos_t tree_parent_pos(tree_pos_t node_pos) {
+    return node_pos/2;
+}
+
+tree_pos_t tree_lson_pos(tree_pos_t node_pos) {
+    return node_pos*2;
+}
+
+tree_pos_t tree_rson_pos(tree_pos_t node_pos) {
+    return 1 + node_pos*2;
+}
+
+void tree_print_debug(tree_val_t tree[]) {
+    tree_pos_t breaker = 1;
+    tree_pos_t counter = 0;
+
+    for(tree_pos_t i=1; i < tree_size; i++) {
         cout << tree[i] << ' ';
         counter++;
-        if(counter >= (int)pow((float)2, (float)breaker)) {
+        if(counter >= breaker) {
             cout << endl;
-            breaker++;
+            breaker*=2;
             counter = 0;
         }
     }
 }
 
-unsigned int tree_pos(unsigned int leaf_pos) {
-    return tree_size/2 + leaf_pos;
-}
-
-unsigned int tree_parent_pos(unsigned int node_pos) {
-    return node_pos/2;
-}
-
-unsigned int tree_lson_pos(unsigned int node_pos) {
-    return node_pos*2;
-}
-
-unsigned int tree_rson_pos(unsigned int node_pos) {
-    return 1 + node_pos*2;
-}
-
-// tree interface
-
-void tree_reset() {
-    for(int i=1; i<tree_size; i++) {
-        tree[i] = 0;
-        tree_state[i] = BLACK;
+void tree_reset(tree_val_t tree[], tree_val_t base_value=0) {
+    for(tree_pos_t i=0; i < TREE_MAX_SIZE; i++) {
+        tree[i] = base_value;
     }
 }
 
-void tree_create(unsigned int leaves) {
-    tree_size = 2*leaves;
-    tree_reset();
-}
-
-unsigned int tree_iterate(unsigned int current_pos, unsigned int target_pos) {
-    assert(target_pos != current_pos);
-
-    if(target_pos > current_pos) {
-        return tree_rson_pos(current_pos);
-    } else {
-        return tree_lson_pos(current_pos);
+void tree_create(tree_val_t tree[], tree_pos_t leaves, tree_val_t base_value=0) {
+    tree_size = 1;
+    while(tree_size <= 2*leaves) {
+        tree_size *= 2;
     }
+    tree_reset(tree, base_value);
 }
 
-void tree_extend_state_to_children(unsigned int current_pos, state paint_state) {
-    unsigned int paint_value = tree[current_pos];
-    if (paint_state != UNKNOWN) {
-        // extend paint state to children if it's known
-        tree_state[tree_lson_pos(current_pos)] = paint_state;
-        tree_state[tree_rson_pos(current_pos)] = paint_state;
-        tree[tree_lson_pos(current_pos)] = paint_value;
-        tree[tree_rson_pos(current_pos)] = paint_value;
+
+// INTERVAL TREE EXTENDED -------------------------------------------------------------------
+
+void update_interval_recursive(
+        tree_pos_t current_pos,
+        tree_pos_t current_left_bound,
+        tree_pos_t current_right_bound,
+        tree_pos_t left_bound,
+        tree_pos_t right_bound,
+        tree_val_t val) {
+    assert(val == black || val == white);
+    if(current_left_bound > current_right_bound || current_left_bound > right_bound || current_right_bound < left_bound) {
+        return;
     }
-}
-
-void tree_extend_state_on_path(unsigned int leaf_target) {
-    unsigned int current_pos = 1;
-    state paint_state = tree_state[1];
-    unsigned int paint_value = tree[1];
-
-    // go along path from root to target leaf and extend state to children of each node
-    current_pos = tree_iterate(current_pos, leaf_target);
-    while (current_pos != leaf_target) {
-        state current_state = tree_state[current_pos];
-        if(paint_state == UNKNOWN && current_state != UNKNOWN) {
-            // define paint state if undefined
-            paint_state = current_state;
+    auto current_state = state[current_pos];
+    if(current_left_bound < current_right_bound && (current_state == white || current_state == black)) {
+        // drop state to children if possible
+        state[tree_lson_pos(current_pos)] = current_state;
+        state[tree_rson_pos(current_pos)] = current_state;
+        exact_count[current_pos] = val==white ? current_right_bound - current_left_bound + 1 : 0;
+    }
+    if(current_state == val) {
+        return;
+    }
+    if(current_left_bound >= left_bound && current_right_bound <= right_bound) {
+        // critical point => update node
+        state[current_pos] = val;
+        exact_count[current_pos] = val==white ? current_right_bound - current_left_bound + 1 : 0;
+        if(current_left_bound < current_right_bound) {
+            state[tree_lson_pos(current_pos)] = val;
+            state[tree_rson_pos(current_pos)] = val;
         }
-        tree_extend_state_to_children(current_pos, paint_state);
-        current_pos = tree_iterate(current_pos, leaf_target);
+        return;
     }
+    tree_pos_t divider = (current_left_bound + current_right_bound) / 2;
+    update_interval_recursive(tree_lson_pos(current_pos), current_left_bound, divider, left_bound, right_bound, val);
+    update_interval_recursive(tree_rson_pos(current_pos), divider+1, current_right_bound, left_bound, right_bound, val);
+    if(state[tree_lson_pos(current_pos)] == state[tree_rson_pos(current_pos)]) {
+        state[current_pos] = state[tree_lson_pos(current_pos)];
+    } else {
+        state[current_pos] = unknown;
+    }
+    exact_count[current_pos] = exact_count[tree_lson_pos(current_pos)] + exact_count[tree_rson_pos(current_pos)];
 }
 
-void tree_extend_state(unsigned int leaf_start, unsigned int leaf_end) {
-    tree_extend_state_on_path(leaf_start);
-    tree_extend_state_on_path(leaf_end);
+void update_interval(tree_pos_t l, tree_pos_t r, tree_val_t val) {
+    update_interval_recursive(tree_root_pos(), tree_pos(0), tree_size-1, tree_pos(l-1), tree_pos(r-1), val);
 }
 
-void tree_set(unsigned int leaf_pos, unsigned int val) {
-    // TODO
-    unsigned int pos = tree_pos(leaf_pos);
-    tree[pos] = val;
+tree_val_t white_segments() {
+    return exact_count[tree_root_pos()];
 }
+
+// HELPERS ----------------------------------------------------------------------------------
+
+// TODO
+
+// SOLUTION ---------------------------------------------------------------------------------
 
 int main() {
+    tree_pos_t n, m;
+    cin >> n >> m;
+
+    tree_create(state, n, black);
+    tree_create(exact_count, n, 0);
+
+    for(tree_pos_t i=0; i<m; i++) {
+        tree_pos_t a, b;
+        char c;
+        cin >> a >> b >> c;
+        if(c == 'C') {
+            update_interval(a, b, black);
+        } else {
+            update_interval(a, b, white);
+        }
+        cout << white_segments() << endl;
+    }
     return 0;
 }
