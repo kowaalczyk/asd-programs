@@ -68,6 +68,7 @@ int main() {
     //0 is a root
     for(int i=0; i<n; i++) {
         int l_path, r_path;
+
         cin >> l_path >> r_path;
         // normalize input to [0...n-1]
         l_path = l_path>0 ? l_path-1 : l_path;
@@ -85,7 +86,7 @@ int main() {
         }
     }
 
-    //bfs1
+    //bfs1 TODO: Ogarnąć od tego miejsca, znaleźć fajne implementacje BFS/DFS
     vector<int> current_nodes;
     current_nodes.push_back(0);
     while(!current_nodes.empty()) {
