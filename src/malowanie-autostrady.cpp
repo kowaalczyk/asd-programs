@@ -127,32 +127,35 @@ void update_interval_recursive(
         tree_val_t val) {
     assert(val == black || val == white);
     if(current_left_bound > current_right_bound || current_left_bound > right_bound || current_right_bound < left_bound) {
+        // not where we want to be
         return;
     }
     auto current_state = state[current_pos];
     if(current_left_bound < current_right_bound && (current_state == white || current_state == black)) {
-        // drop state to children if possible
+        // children exist and current state is determinate => drop state to children
         state[tree_lson_pos(current_pos)] = current_state;
         state[tree_rson_pos(current_pos)] = current_state;
-        exact_count[current_pos] = val==white ? current_right_bound - current_left_bound + 1 : 0;
-    }
-    if(current_state == val) {
-        return;
+        if(current_state == white) {
+            // set children's exact_count
+            tree_val_t subtree_range = (current_right_bound - current_left_bound + 1)/2;
+            exact_count[tree_lson_pos(current_pos)] = subtree_range;
+            exact_count[tree_rson_pos(current_pos)] = subtree_range;
+        } else {
+            exact_count[tree_lson_pos(current_pos)] = 0;
+            exact_count[tree_rson_pos(current_pos)] = 0;
+        }
     }
     if(current_left_bound >= left_bound && current_right_bound <= right_bound) {
         // critical point => update node
         state[current_pos] = val;
         exact_count[current_pos] = val==white ? current_right_bound - current_left_bound + 1 : 0;
-        if(current_left_bound < current_right_bound) {
-            state[tree_lson_pos(current_pos)] = val;
-            state[tree_rson_pos(current_pos)] = val;
-        }
         return;
     }
     tree_pos_t divider = (current_left_bound + current_right_bound) / 2;
     update_interval_recursive(tree_lson_pos(current_pos), current_left_bound, divider, left_bound, right_bound, val);
     update_interval_recursive(tree_rson_pos(current_pos), divider+1, current_right_bound, left_bound, right_bound, val);
     if(state[tree_lson_pos(current_pos)] == state[tree_rson_pos(current_pos)]) {
+        // left and right subtrees have identical state - mark it for quicker reading in the future
         state[current_pos] = state[tree_lson_pos(current_pos)];
     } else {
         state[current_pos] = unknown;
@@ -164,13 +167,11 @@ void update_interval(tree_pos_t l, tree_pos_t r, tree_val_t val) {
     update_interval_recursive(tree_root_pos(), tree_pos(0), tree_size-1, tree_pos(l-1), tree_pos(r-1), val);
 }
 
+// HELPERS ----------------------------------------------------------------------------------
+
 tree_val_t white_segments() {
     return exact_count[tree_root_pos()];
 }
-
-// HELPERS ----------------------------------------------------------------------------------
-
-// TODO
 
 // SOLUTION ---------------------------------------------------------------------------------
 
