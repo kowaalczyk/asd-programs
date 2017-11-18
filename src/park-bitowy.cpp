@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <assert.h>
 
 using namespace std;
 
@@ -41,6 +42,25 @@ using namespace std;
 /*
  * Takie structy trzymamy sobie w tablicy i w bfs-ie tylko używamy wskaźników
  */
+
+// HELPERS
+
+/// returns floor of log_2(x)
+inline int log_floor(int x) {
+    assert(x>0);
+    int ans = 0;
+    while (x >>= 1) ++ans;
+    return ans;
+}
+
+/// returns 2^x
+inline int pow_2(int x) {
+    assert(x>=0);
+    return (x > 0 ? 2<<x : 1);
+}
+
+// MAIN FUNCTIONS AND STRUCTS
+
 struct Node {
     int parent; //for traversal
     int left; //for traversal
@@ -49,16 +69,90 @@ struct Node {
     int left_range_length; //calc in bfs1
     int right_range; //calc in bfs1
     int right_range_length; //calc in bfs1
-    int top_range; //calc in bfs2
-    int top_range_length; //calc in bfs2
+    int down_range; //calc in bfs2
+    int down_range_length; //calc in bfs2
     int level; //calc in bfs
 };
 
 Node tree[500000];
+int hop[20][500000]; // hop[i][v] := 2^i-th parent of node v
 
-//find any node d edges away from a
-int find_node(int a, int d) {
+// TODO: Calculate hops
 
+/// returns id of ancestor found by hopping up in O(log(n))
+int find_ancestor(int v, int h) {
+    int ans = v;
+    int i = log_floor(v);
+    while(h > 0) {
+        if(pow_2(i) > h) {
+            i -= 1;
+        } else {
+            ans = hop[i][ans];
+            h -= pow_2(i);
+        }
+    }
+    return ans;
+}
+
+/// returns id of lowest common ancestor for nodes u and v, n is the number of all nodes in graph
+int lca(int u, int v, int n) {
+    int lu = tree[u].level;
+    int lv = tree[v].level;
+
+    if(lu < lv) {
+        v = find_ancestor(v, lv-lu);
+        lv = tree[v].level;
+    } else if(lu > lv) {
+        u = find_ancestor(u, lu-lv);
+        lu = tree[u].level;
+    }
+    assert(lu == lv);
+    if(u == v) {
+        return u;
+    }
+    for(int i = log_floor(n); i >= 0; i--) {
+        if(hop[i][u] != hop[i][v]) {
+            u = hop[i][u];
+            v = hop[i][v];
+        }
+    }
+    return u;
+}
+
+void calc_range_down(int node_id) {
+    auto current_node = &tree[node_id];
+    int ans_node_id = node_id;
+    int ans_node_range = 0;
+    if(current_node->left != -1) {
+        auto left_node = tree[current_node->left];
+        // check furthest down in left subtree
+        int left_node_range = left_node.down_range;
+        if(left_node_range+1 > ans_node_range) {
+            ans_node_id = current_node->left;
+            ans_node_range = left_node_range+1;
+        }
+    }
+    if(current_node->right != -1) {
+        // check furthest down in right subtree
+        auto right_node = tree[current_node->right];
+        // check furthest down in left subtree
+        int right_node_range = right_node.down_range;
+        if(right_node_range+1 > ans_node_range) {
+            ans_node_id = current_node->right;
+            ans_node_range = right_node_range+1;
+        }
+    }
+    current_node->down_range = ans_node_id;
+    current_node->down_range_length = ans_node_range;
+}
+
+void calc_ranges(Node *n) {
+
+}
+
+/// returns id of any node d edges away from v
+int find_node(int v, int d) {
+    // TODO
 }
 
 int main() {
@@ -88,12 +182,12 @@ int main() {
 
     //bfs1 TODO: Ogarnąć od tego miejsca, znaleźć fajne implementacje BFS/DFS
     vector<int> current_nodes;
-    current_nodes.push_back(0);
-    while(!current_nodes.empty()) {
+//    current_nodes.push_back(0);
+//    while(!current_nodes.empty()) {
 //        int i = current_nodes.front();
 //        current_nodes.erase(current_nodes.begin());
-
-    }
+//
+//    }
 
     int m;
     cin >> m;
