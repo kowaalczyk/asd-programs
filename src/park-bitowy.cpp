@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 
@@ -74,8 +74,9 @@ struct Node {
     int level; //calc in bfs
 };
 
-Node tree[500000];
-int hop[20][500000]; // hop[i][v] := 2^i-th parent of node v
+const int START_NODE_ID = 1;
+Node tree[500001];
+int hop[20][500001]; // hop[i][v] := 2^i-th parent of node v
 
 // TODO: Calculate hops
 
@@ -135,7 +136,6 @@ void calc_range_down(int node_id) {
     if(current_node->right != -1) {
         // check furthest down in right subtree
         auto right_node = tree[current_node->right];
-        // check furthest down in left subtree
         int right_node_range = right_node.down_range;
         if(right_node_range+1 > ans_node_range) {
             ans_node_id = current_node->right;
@@ -146,8 +146,15 @@ void calc_range_down(int node_id) {
     current_node->down_range_length = ans_node_range;
 }
 
-void calc_ranges(Node *n) {
+void bfs_ranges_1() {
+    int current_pos = START_NODE_ID;
+}
 
+void calc_ranges(Node *n) {
+    // TODO:
+    // post-order calc_range_down
+    // pre-order calc_range_up
+    // top
 }
 
 /// returns id of any node d edges away from v
@@ -159,14 +166,11 @@ int main() {
     int n;
     cin >> n;
 
-    //0 is a root
-    for(int i=0; i<n; i++) {
+    //1 is a root
+    for(int i=1; i<=n; i++) {
         int l_path, r_path;
 
         cin >> l_path >> r_path;
-        // normalize input to [0...n-1]
-        l_path = l_path>0 ? l_path-1 : l_path;
-        r_path = r_path>0 ? r_path-1 : r_path;
 
         tree[i].left = l_path;
         tree[i].right = r_path;
@@ -194,9 +198,7 @@ int main() {
     for(int i=0; i<m; i++) {
         int a, d;
         cin >> a >> d;
-        auto found_node = find_node(a,d);
-        found_node = found_node>=0 ? found_node+1 : found_node;
-        cout << found_node << endl;
+        cout << find_node(a,d) << endl;
     }
 
     return 0;
