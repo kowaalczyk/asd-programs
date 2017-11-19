@@ -65,12 +65,10 @@ struct Node {
     int parent; //for traversal
     int left; //for traversal
     int right; //for traversal
-    int left_range; //calc in bfs1
-    int left_range_length; //calc in bfs1
-    int right_range; //calc in bfs1
-    int right_range_length; //calc in bfs1
-    int down_range; //calc in bfs2
-    int down_range_length; //calc in bfs2
+    int down_range; //calc in bfs1
+    int down_range_length; //calc in bfs1
+    int up_range; //calc in bfs2
+    int up_range_length; //calc in bfs2
     int level; //calc in bfs
 };
 
@@ -120,7 +118,7 @@ int lca(int u, int v, int n) {
     return u;
 }
 
-void calc_range_down(int node_id) {
+void set_range_down(int node_id) {
     auto current_node = &tree[node_id];
     int ans_node_id = node_id;
     int ans_node_range = 0;
@@ -129,7 +127,7 @@ void calc_range_down(int node_id) {
         // check furthest down in left subtree
         int left_node_range = left_node.down_range;
         if(left_node_range+1 > ans_node_range) {
-            ans_node_id = current_node->left;
+            ans_node_id = left_node.down_range;
             ans_node_range = left_node_range+1;
         }
     }
@@ -138,7 +136,7 @@ void calc_range_down(int node_id) {
         auto right_node = tree[current_node->right];
         int right_node_range = right_node.down_range;
         if(right_node_range+1 > ans_node_range) {
-            ans_node_id = current_node->right;
+            ans_node_id = right_node.down_range;
             ans_node_range = right_node_range+1;
         }
     }
@@ -146,15 +144,60 @@ void calc_range_down(int node_id) {
     current_node->down_range_length = ans_node_range;
 }
 
-void bfs_ranges_1() {
-    int current_pos = START_NODE_ID;
+void calc_range_down_recursive(int current_node_id) {
+    assert(current_node_id != -1);
+    Node *current_node = &tree[current_node_id];
+    if(current_node->left != -1) {
+        calc_range_down_recursive(current_node->left);
+    }
+    if(current_node->right != -1) {
+        calc_range_down_recursive(current_node->right);
+    }
+    set_range_down(current_node_id);
 }
 
-void calc_ranges(Node *n) {
-    // TODO:
-    // post-order calc_range_down
-    // pre-order calc_range_up
-    // top
+void set_range_up(int node_id) {
+    auto current_node = &tree[node_id];
+    int ans_node_id = node_id;
+    int ans_node_range = 0;
+    if(current_node->parent != -1) {
+        // check furthest up in parent
+        auto parent_node = &tree[current_node->parent];
+        int parent_node_range = parent_node->up_range;
+        if(parent_node_range+1 > ans_node_range) {
+            ans_node_id = parent_node->up_range;
+            ans_node_range = parent_node_range+1;
+        }
+        int sibling_id = parent_node->left == node_id ? parent_node->right : parent_node->left;
+        if(sibling_id != -1 && tree[sibling_id].down_range_length+2 > ans_node_range) {
+            // check furthest down in sibling if it exists
+            ans_node_id = tree[sibling_id].down_range;
+            ans_node_range = tree[sibling_id].down_range_length+2;
+        }
+    }
+    current_node->up_range = ans_node_id;
+    current_node->up_range_length = ans_node_range;
+}
+
+void calc_range_up_recursive(int current_node_id) {
+    assert(current_node_id != -1);
+    set_range_up(current_node_id);
+    auto current_node = &tree[current_node_id];
+    if(current_node->left != -1) {
+        calc_range_up_recursive(current_node->left);
+    }
+    if(current_node->right != -1) {
+        calc_range_up_recursive(current_node->right);
+    }
+}
+
+void calc_ranges() {
+    calc_range_down_recursive(START_NODE_ID);
+    calc_range_up_recursive(START_NODE_ID);
+}
+
+void calc_hops() {
+    // TODO
 }
 
 /// returns id of any node d edges away from v
