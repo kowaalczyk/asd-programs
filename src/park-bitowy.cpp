@@ -143,7 +143,7 @@ void set_range_down(int node_id) {
     if(current_node->left != -1) {
         auto left_node = tree[current_node->left];
         // check furthest down in left subtree
-        int left_node_range = left_node.down_range;
+        int left_node_range = left_node.down_range_length;
         if(left_node_range+1 > ans_node_range) {
             ans_node_id = left_node.down_range;
             ans_node_range = left_node_range+1;
@@ -152,7 +152,7 @@ void set_range_down(int node_id) {
     if(current_node->right != -1) {
         // check furthest down in right subtree
         auto right_node = tree[current_node->right];
-        int right_node_range = right_node.down_range;
+        int right_node_range = right_node.down_range_length;
         if(right_node_range+1 > ans_node_range) {
             ans_node_id = right_node.down_range;
             ans_node_range = right_node_range+1;
@@ -183,7 +183,7 @@ void set_range_up(int node_id) {
     if(current_node->parent != -1) {
         // check furthest up in parent
         auto parent_node = &tree[current_node->parent];
-        int parent_node_range = parent_node->up_range;
+        int parent_node_range = parent_node->up_range_length;
         if(parent_node_range+1 > ans_node_range) {
             ans_node_id = parent_node->up_range;
             ans_node_range = parent_node_range+1;
