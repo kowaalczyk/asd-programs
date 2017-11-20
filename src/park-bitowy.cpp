@@ -56,7 +56,7 @@ inline int log_floor(int x) {
 /// returns 2^x
 inline int pow_2(int x) {
     assert(x>=0);
-    return (x > 0 ? 2<<x : 1);
+    return (x > 0 ? 2<<(x-1) : 1);
 }
 
 // MAIN FUNCTIONS AND STRUCTS
@@ -80,13 +80,13 @@ int hop[20][500001]; // hop[i][v] := 2^i-th parent of node v
 void calc_levels_recursive(int current_node_id, int level) {
     assert(current_node_id != -1);
     Node *current_node = &tree[current_node_id];
+    current_node->level = level;
     if(current_node->left != -1) {
         calc_levels_recursive(current_node->left, level+1);
     }
     if(current_node->right != -1) {
         calc_levels_recursive(current_node->right, level+1);
     }
-    current_node->level = level;
 }
 
 /// calculates levels(depth) for all nodes in a tree
@@ -106,6 +106,7 @@ int find_ancestor(int node_id, int h, int total_nodes) {
             h -= pow_2(i);
         }
     }
+    assert(ans >= START_NODE_ID && ans <= total_nodes);
     return ans;
 }
 
@@ -213,8 +214,15 @@ void calc_range_up_recursive(int current_node_id) {
 
 /// calculates hops for all nodes
 void calc_hops(int total_nodes) {
-    for(int dist=0; dist < 20; dist++) {
-        for(int v=1; v< total_nodes; v++) {
+    // fill array with -1s
+    for(int dist = 0; dist < 20; dist++) {
+        for (int v = 1; v <= total_nodes; v++) {
+            hop[dist][v] = -1;
+        }
+    }
+    // calculate hops
+    for(int dist = 0; dist < 20; dist++) {
+        for(int v = 1; v <= total_nodes; v++) {
             if(dist == 0) {
                 hop[dist][v] = tree[v].parent;
             } else if(hop[dist-1][v] != -1) {
@@ -239,7 +247,7 @@ int find_node(int v, int d, int total_nodes) {
     if(d < tree[lca_node_id].level - current_node.level) {
         return find_ancestor(v, d, total_nodes);
     } else {
-        return find_ancestor(lca_node_id, max_length - d, total_nodes);
+        return find_ancestor(max_node, max_length - d, total_nodes);
     }
 }
 
@@ -248,12 +256,14 @@ int main() {
     int n;
     cin >> n;
     for(int i=1; i<=n; i++) {
-        //1 is a root
         int l_path, r_path;
         cin >> l_path >> r_path;
         tree[i].left = l_path;
         tree[i].right = r_path;
-        // (-1) means there is no path
+        // (-1) means there is no path, START_NODE_ID==1 is a root
+        if(i == START_NODE_ID) {
+            tree[i].parent = -1;
+        }
         if(l_path != -1) {
             tree[l_path].parent = i;
         }
