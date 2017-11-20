@@ -65,23 +65,39 @@ struct Node {
     int parent; //for traversal
     int left; //for traversal
     int right; //for traversal
+    int level; //calc in bfs1
     int down_range; //calc in bfs1
     int down_range_length; //calc in bfs1
     int up_range; //calc in bfs2
     int up_range_length; //calc in bfs2
-    int level; //calc in bfs
 };
 
 const int START_NODE_ID = 1;
 Node tree[500001];
 int hop[20][500001]; // hop[i][v] := 2^i-th parent of node v
 
-// TODO: Calculate hops
+/// use calc_levels
+void calc_levels_recursive(int current_node_id, int level) {
+    assert(current_node_id != -1);
+    Node *current_node = &tree[current_node_id];
+    if(current_node->left != -1) {
+        calc_levels_recursive(current_node->left, level+1);
+    }
+    if(current_node->right != -1) {
+        calc_levels_recursive(current_node->right, level+1);
+    }
+    current_node->level = level;
+}
+
+/// calculates levels(depth) for all nodes in a tree
+void calc_levels() {
+    calc_levels_recursive(START_NODE_ID, 0);
+}
 
 /// returns id of ancestor found by hopping up in O(log(n))
-int find_ancestor(int v, int h) {
-    int ans = v;
-    int i = log_floor(v);
+int find_ancestor(int node_id, int h, int total_nodes) {
+    int ans = node_id;
+    int i = log_floor(total_nodes);
     while(h > 0) {
         if(pow_2(i) > h) {
             i -= 1;
@@ -93,31 +109,32 @@ int find_ancestor(int v, int h) {
     return ans;
 }
 
-/// returns id of lowest common ancestor for nodes u and v, n is the number of all nodes in graph
-int lca(int u, int v, int n) {
-    int lu = tree[u].level;
-    int lv = tree[v].level;
+/// returns id of lowest common ancestor for given nodes
+int lca(int node_1_id, int node_2_id, int total_nodes) {
+    int level_1 = tree[node_1_id].level;
+    int level_2 = tree[node_2_id].level;
 
-    if(lu < lv) {
-        v = find_ancestor(v, lv-lu);
-        lv = tree[v].level;
-    } else if(lu > lv) {
-        u = find_ancestor(u, lu-lv);
-        lu = tree[u].level;
+    if(level_1 < level_2) {
+        node_2_id = find_ancestor(node_2_id, level_2-level_1, total_nodes);
+        level_2 = tree[node_2_id].level;
+    } else if(level_1 > level_2) {
+        node_1_id = find_ancestor(node_1_id, level_1-level_2, total_nodes);
+        level_1 = tree[node_1_id].level;
     }
-    assert(lu == lv);
-    if(u == v) {
-        return u;
+    assert(level_1 == level_2); //TODO: Failed (3 == 0) on
+    if(node_1_id == node_2_id) {
+        return node_1_id;
     }
-    for(int i = log_floor(n); i >= 0; i--) {
-        if(hop[i][u] != hop[i][v]) {
-            u = hop[i][u];
-            v = hop[i][v];
+    for(int i = log_floor(total_nodes); i >= 0; i--) {
+        if(hop[i][node_1_id] != hop[i][node_2_id]) {
+            node_1_id = hop[i][node_1_id];
+            node_2_id = hop[i][node_2_id];
         }
     }
-    return u;
+    return node_1_id;
 }
 
+/// sets range_down for given node, assuming the value was calculated for its children
 void set_range_down(int node_id) {
     auto current_node = &tree[node_id];
     int ans_node_id = node_id;
@@ -144,6 +161,7 @@ void set_range_down(int node_id) {
     current_node->down_range_length = ans_node_range;
 }
 
+/// calculates range down for each node by iterating over the tree post-order
 void calc_range_down_recursive(int current_node_id) {
     assert(current_node_id != -1);
     Node *current_node = &tree[current_node_id];
@@ -156,6 +174,7 @@ void calc_range_down_recursive(int current_node_id) {
     set_range_down(current_node_id);
 }
 
+/// sets range_up for given node, assuming range_up was calculated for parent and range_down was calculated for sibling
 void set_range_up(int node_id) {
     auto current_node = &tree[node_id];
     int ans_node_id = node_id;
@@ -179,6 +198,7 @@ void set_range_up(int node_id) {
     current_node->up_range_length = ans_node_range;
 }
 
+/// calculates range up for each node by iterating over the tree pre-order
 void calc_range_up_recursive(int current_node_id) {
     assert(current_node_id != -1);
     set_range_up(current_node_id);
@@ -191,57 +211,68 @@ void calc_range_up_recursive(int current_node_id) {
     }
 }
 
-void calc_ranges() {
-    calc_range_down_recursive(START_NODE_ID);
-    calc_range_up_recursive(START_NODE_ID);
-}
-
-void calc_hops() {
-    // TODO
+/// calculates hops for all nodes
+void calc_hops(int total_nodes) {
+    for(int dist=0; dist < 20; dist++) {
+        for(int v=1; v< total_nodes; v++) {
+            if(dist == 0) {
+                hop[dist][v] = tree[v].parent;
+            } else if(hop[dist-1][v] != -1) {
+                hop[dist][v] = hop[dist-1][hop[dist-1][v]];
+            } else {
+                hop[dist][v] = -1;
+            }
+        }
+    }
 }
 
 /// returns id of any node d edges away from v
-int find_node(int v, int d) {
-    // TODO
+int find_node(int v, int d, int total_nodes) {
+    assert(v != -1);
+    auto current_node = tree[v];
+    int max_length = max(current_node.down_range_length, current_node.up_range_length);
+    if(max_length < d) {
+        return -1;
+    }
+    auto max_node = max_length==current_node.down_range_length ? current_node.down_range : current_node.up_range;
+    int lca_node_id = lca(v, max_node, total_nodes);
+    if(d < tree[lca_node_id].level - current_node.level) {
+        return find_ancestor(v, d, total_nodes);
+    } else {
+        return find_ancestor(lca_node_id, max_length - d, total_nodes);
+    }
 }
 
 int main() {
+    //load input
     int n;
     cin >> n;
-
-    //1 is a root
     for(int i=1; i<=n; i++) {
+        //1 is a root
         int l_path, r_path;
-
         cin >> l_path >> r_path;
-
         tree[i].left = l_path;
         tree[i].right = r_path;
         // (-1) means there is no path
-
-        if(l_path > 0) {
+        if(l_path != -1) {
             tree[l_path].parent = i;
         }
-        if(r_path > 0) {
+        if(r_path != -1) {
             tree[r_path].parent = i;
         }
     }
-
-    //bfs1 TODO: Ogarnąć od tego miejsca, znaleźć fajne implementacje BFS/DFS
-    vector<int> current_nodes;
-//    current_nodes.push_back(0);
-//    while(!current_nodes.empty()) {
-//        int i = current_nodes.front();
-//        current_nodes.erase(current_nodes.begin());
-//
-//    }
-
     int m;
     cin >> m;
+    // pre-process as much as possible
+    calc_levels();
+    calc_hops(n);
+    calc_range_down_recursive(START_NODE_ID);
+    calc_range_up_recursive(START_NODE_ID);
+    // process each request in O(log(n))
     for(int i=0; i<m; i++) {
         int a, d;
         cin >> a >> d;
-        cout << find_node(a,d) << endl;
+        cout << find_node(a, d, n) << endl;
     }
 
     return 0;
