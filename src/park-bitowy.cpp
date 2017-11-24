@@ -1,47 +1,7 @@
 #include <iostream>
-#include <vector>
 #include <cassert>
 
 using namespace std;
-
-/*
- * Dostajemy gigantyczne drzewo binarne
- * chcemy dla danego wierzchołka znajdować wierzchołek oddalony od niego o daną odległość.
- * BFS jest za wolny, chcemy chodzić szybciej niż liniowo
- *
- * Trick1;
- * Część naszych problemów rozwiązuje pamiętanie dla każdego wierzchołka jaki jest od niego najbardziej oddalony:
- * - (-1) możemy zwracać od razu
- * - wpp możemy ograniczyć się tylko do ścieżki pomiędzy tym wierzchołkiem a danym:
- *  a) najdalszy jest moim synem
- *  b) najdalszy jest synem któregoś z moich przodków
- *
- *  Rozwiązanie:
- *  1x BFS do policzenia najbardziej oddalonego w lewo i w prawo (synów) --> preprocessing O(n)
- *  czy uda nam się policzyć najbardziej oddalony w górę?
- *      Nie do końca:
- *      znowu idziemy BFS-em i sprawdzamy jakie są najbardziej oddalone od ojca w przeciwną stronę niż my
- *      i najbardziej oddalony w górę -> porównujemy te 2 wielkości no i mamy nasz najdalszy w górę
- *  Efekt:
- *  mamy już (-1) w czasie stałym, przy 6 pomocniczych tablicach
- *  mamy też 3 możliwości pozycji najbardziej oddalonego:
- *  a) wspólny przodek
- *  b) pod nami
- *  c) nad nami
- *  Będziemy chcieli skorzytać z tego gdzie jest najdalszy żeby to obliczyć:
- *  - możemy pamiętać jeszcze poziom każdego wierzchołka i pamiętać wspólnego przodka z między nim a najdalszym
- *  - możemy też mieć strukture która pozwala nam skakać:
- *      chcemy mieć odnośniki do wierzchołków odległych o 2,4,8,16,32,itd (wtedy mamy O(log(n)))
- *      tablica n x log(n) mieści się w pamięci (dla intów ok. 40MB)
- *      budujemy ją w czasie O(nlog(n)) po BFS-ach, przy jej budowaniu korzystamy sobie z poprzednich wartości
- *      (dla danego wierzchołka przy obliczniu 4 korzystamy z tego że mamy obliczone 2)
- *      --> zaczynamy dla policzenia odległości o 2 od każdego z wierzchłków, potem 4 itd.
- *  - ponieważ mamy głębokość i odległość (dla nas i najdalszego wierzchołka) więc możemy ocenić które z a/b/c zachodzi
- */
-
-/*
- * Takie structy trzymamy sobie w tablicy i w bfs-ie tylko używamy wskaźników
- */
 
 // HELPERS
 
@@ -132,7 +92,7 @@ int lca(int node_1_id, int node_2_id, int total_nodes) {
             node_2_id = hop[i][node_2_id];
         }
     }
-    return node_1_id;
+    return tree[node_1_id].parent;
 }
 
 /// sets range_down for given node, assuming the value was calculated for its children
@@ -244,7 +204,7 @@ int find_node(int v, int d, int total_nodes) {
     }
     auto max_node = max_length==current_node.down_range_length ? current_node.down_range : current_node.up_range;
     int lca_node_id = lca(v, max_node, total_nodes);
-    if(d < tree[lca_node_id].level - current_node.level) {
+    if(d <= current_node.level - tree[lca_node_id].level) {
         return find_ancestor(v, d, total_nodes);
     } else {
         return find_ancestor(max_node, max_length - d, total_nodes);
