@@ -116,12 +116,6 @@ int main() {
             }
         }
     }
-    // calculate optimal cost of reaching last node
-    if(min_cost[0][last_node_id] == -1) {
-        return -1;
-    } else {
-
-    }
 
     cout << calc_min_cost(last_node_id) << endl;
     return 0;
