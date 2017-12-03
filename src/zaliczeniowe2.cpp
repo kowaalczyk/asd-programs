@@ -53,6 +53,8 @@ long long calc_min_cost(int node_id) {
     return ans;
 }
 
+// TODO: Rewrite everything in dijkstra
+
 int main() {
     // init arrays
     for(int i=0; i<MAX_NODES; i++) {
@@ -73,12 +75,33 @@ int main() {
         // register connections in graph nodes
         G[v].emplace_back(w, connection_id);
         G_pred[w].emplace_back(v, connection_id);
-        routes_to_calc[w]++;
         // register connection cost and discount
         connections[connection_id].first = c;
         connections[connection_id].second = b;
     }
 
+    // first bfs maps possible routes from node 0 to each of the nodes
+    assert(routes_to_calc[0] == 0);
+    Q.push(0);
+    while(!Q.empty()) {
+        int current_node_id = Q.front();
+        Q.pop();
+        for(auto connection : G[current_node_id]) {
+            int following_node_id = get_node_id(connection);
+            if(routes_to_calc[following_node_id] == 0 && following_node_id != 0) {
+                Q.push(following_node_id);
+            }
+            routes_to_calc[following_node_id]++;
+        }
+    }
+
+    if(routes_to_calc[n-1] == 0) {
+        // no route from node 0 leads to node n-1
+        cout << -1 << endl;
+        return 0;
+    }
+
+    // second bfs allows to calculate optimal cost dynamically
     assert(routes_to_calc[0] == 0); // TODO: This fails because starting node can have dependencies as well
     Q.push(0);
     while(!Q.empty()) {
