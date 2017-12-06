@@ -19,12 +19,14 @@ using namespace std;
  * TODO - Rewrite w/ Dijkstra:
  *
  * for(k : # possible coupons):
- *   - all reachable nodes have cost w/ (k-1)-discounts calculated
- *   - all nodes in currently calculated set have cost w/ k-discounts calculated
+ *   - (INV) all reachable nodes have cost w/ (k-1)-discounts calculated
  *
  *   1. current node := front of Q
+ *   - (INV) all nodes visited previously have cost w/ k-discounts calculated
+ *
  *   2. current node cost w/ k discounts := min(its previous cost w/ k discounts, its q-top cost)
  *      - if node n has been calculated, BREAK
+ *
  *   3. for following node:
  *      - Q-pushed cost of following node w/ k-discounts :=
  *          min(cost of current node w/ (k-1) discounts + cost of reaching next w/ discount,
