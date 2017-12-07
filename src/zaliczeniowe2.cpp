@@ -2,7 +2,6 @@
 #include <vector>
 #include <queue>
 #include <tuple>
-#include <cassert>
 
 using namespace std;
 
@@ -16,7 +15,6 @@ using namespace std;
  */
 
 /*
- * TODO - Rewrite w/ Dijkstra:
  *
  * for(k : # possible coupons):
  *   - (INV) all reachable nodes have cost w/ (k-1)-discounts calculated
@@ -89,9 +87,50 @@ void load_connection(graph_id_t connection_id) {
     connections_to[w]++;
 }
 
-int main() {
-//    ios_base::sync_with_stdio(false); // TODO: make sure this does not fuck up everything in functions above
+cost_t calc_discounted_cost(graph_id_t start_node_id, graph_id_t end_node_id, int discounts) {
 
+    dijkstra_q.emplace(0, start_node_id);
+    while(!dijkstra_q.empty()) {
+        // visit next node from queue
+        auto current_node_data = dijkstra_q.top();
+        dijkstra_q.pop();
+        graph_id_t current_node_id = current_node_data.second;
+        times_visited[current_node_id]++;
+        // get both cost variants for current_k
+        cost_t current_node_previous_cost = min_cost[discounts][current_node_id];
+        cost_t current_node_temp_cost = current_node_data.first;
+        // calculate cost and update values
+        cost_t current_node_calculated_cost;
+        if(current_node_previous_cost == NODE_UNREACHABLE) {
+            current_node_calculated_cost = current_node_temp_cost;
+        } else {
+            current_node_calculated_cost = min(current_node_previous_cost, current_node_temp_cost);
+        }
+        min_cost[discounts][current_node_id] = current_node_calculated_cost;
+        // add following nodes to Dijkstra queue with calculated temporary cost
+        for(graph_id_t following_connection_id : connections_from()[current_node_id]) {
+            const connection_t &following_connection = connections()[following_connection_id];
+            graph_id_t destination_node_id = get_destination(following_connection);
+            if(get_destination(following_connection) != current_node_id && times_visited[destination_node_id] < connections_to[destination_node_id]) {
+                if(discounts>0) {
+                    cost_t cost_variant[2];
+                    cost_variant[0] = min_cost[discounts][current_node_id] + get_cost(following_connection);
+                    cost_variant[1] = min_cost[discounts-1][current_node_id] + get_discounted_cost(following_connection);
+                    dijkstra_q.emplace(min(cost_variant[0], cost_variant[1]), get_destination(following_connection));
+                } else {
+                    dijkstra_q.emplace(current_node_calculated_cost + get_cost(following_connection), get_destination(following_connection));
+                }
+            }
+        }
+    }
+    // clear queue and times visited for all nodes
+    for (int &i_visited : times_visited) {
+        i_visited = 0;
+    }
+}
+
+int main() {
+    ios_base::sync_with_stdio(false); // TODO: make sure this does not fuck up everything in functions above
     // init arrays
     for(int i=0; i<MAX_NODES; i++) {
         for(int j=0; j<=MAX_COUPONS; j++) {
@@ -100,7 +139,6 @@ int main() {
         connections_to[i] = 0;
         times_visited[i] = 0;
     }
-
     // load variables
     int n, m, k; // # of cities, # of connection_data, # of coupons
     cin >> n >> m >> k;
@@ -109,82 +147,17 @@ int main() {
     for(graph_id_t connection_id=0; connection_id<m; connection_id++) {
         load_connection(connection_id);
     }
-
     // standard Dijkstra for calculating cost with 0 discount && checking whether last_node is reachable
-    dijkstra_q.emplace(0, first_node_id);
-    while(!dijkstra_q.empty()) {
-        auto current_node_data = dijkstra_q.top();
-        dijkstra_q.pop();
-        times_visited[current_node_data.second]++;
-        // get both cost variants
-        cost_t current_node_previous_cost = min_cost[0][current_node_data.second];
-        cost_t current_node_temp_cost = current_node_data.first;
-        // calculate actual cost and update values
-        cost_t current_node_calculated_cost;
-        if(current_node_previous_cost == NODE_UNREACHABLE) {
-            current_node_calculated_cost = current_node_temp_cost;
-        } else {
-            current_node_calculated_cost = min(current_node_previous_cost, current_node_temp_cost);
-        }
-        min_cost[0][current_node_data.second] = current_node_calculated_cost;
-        // add following nodes to Dijkstra queue with calculated temporary cost
-        for(graph_id_t following_connection_id : connections_from()[current_node_data.second]) {
-            const connection_t &following_connection = connections()[following_connection_id];
-            graph_id_t destination_node_id = get_destination(following_connection);
-            if(destination_node_id != current_node_data.second && times_visited[destination_node_id] < connections_to[destination_node_id]) {
-                dijkstra_q.emplace(current_node_calculated_cost + get_cost(following_connection), get_destination(following_connection));
-            }
-        }
-    }
-    for(int i=0; i<MAX_NODES; i++) {
-        // clear times visited
-        times_visited[i] = 0;
-    }
-
+    calc_discounted_cost(first_node_id, last_node_id, 0);
     if(min_cost[0][last_node_id] == NODE_UNREACHABLE) {
         // node is unreachable after standard Dijkstra ==> there is no way to reach it in further iterations
         cout << -1 << endl;
         exit(0);
     }
-
-    // TODO: 2nd Dijkstra for calculating other costs
+    // if target node was reachable, calculate cost for more discounts
     for(int current_k = 1; current_k <= k; current_k++) {
-        assert(dijkstra_q.empty());
-        dijkstra_q.emplace(0, first_node_id);
-        while(!dijkstra_q.empty()) {
-            auto current_node_data = dijkstra_q.top();
-            dijkstra_q.pop();
-            graph_id_t current_node_id = current_node_data.second;
-            times_visited[current_node_id]++;
-            // get both cost variants for current_k
-            cost_t current_node_previous_cost = min_cost[current_k][current_node_id];
-            cost_t current_node_temp_cost = current_node_data.first;
-            // calculate cost and update values
-            cost_t current_node_calculated_cost;
-            if(current_node_previous_cost == NODE_UNREACHABLE) {
-                current_node_calculated_cost = current_node_temp_cost;
-            } else {
-                current_node_calculated_cost = min(current_node_previous_cost, current_node_temp_cost);
-            }
-            min_cost[current_k][current_node_id] = current_node_calculated_cost;
-            // add following nodes to Dijkstra queue with calculated temporary cost
-            for(graph_id_t following_connection_id : connections_from()[current_node_id]) {
-                const connection_t &following_connection = connections()[following_connection_id];
-                graph_id_t destination_node_id = get_destination(following_connection);
-                if(get_destination(following_connection) != current_node_id && times_visited[destination_node_id] < connections_to[destination_node_id]) {
-                    cost_t cost_variant[2];
-                    cost_variant[0] = min_cost[current_k][current_node_id] + get_cost(following_connection);
-                    cost_variant[1] = min_cost[current_k-1][current_node_id] + get_discounted_cost(following_connection);
-                    dijkstra_q.emplace(min(cost_variant[0], cost_variant[1]), get_destination(following_connection));
-                }
-            }
-        }
-        for(int i=0; i<MAX_NODES; i++) {
-            // clear times visited
-            times_visited[i] = 0;
-        }
+        calc_discounted_cost(first_node_id, last_node_id, current_k);
     }
-
     cout << min_cost[k][last_node_id] << endl;
     return 0;
 }
