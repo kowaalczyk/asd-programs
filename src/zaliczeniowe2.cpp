@@ -50,9 +50,19 @@ typedef long long int cost_t;
 typedef tuple<graph_id_t, graph_id_t, graph_id_t, cost_t, cost_t> connection_t; /// := {connection_id, from_node, to_node, cost, discount}
 typedef pair<cost_t, graph_id_t> connection_dijkstra_t; /// := {connection_temporary_cost, connection_id} for use in Dijkstra queue
 
-connection_t connections[MAX_CONNECTIONS];
-vector<graph_id_t> connections_from[MAX_NODES]; /// G[i] := vector of connection ids starting from i
-priority_queue<connection_dijkstra_t> dijkstra_q; /// priority queue for Dijkstra algorithm
+//connection_t connections[MAX_CONNECTIONS];
+//vector<graph_id_t> connections_from[MAX_NODES]; /// G[i] := vector of connection ids starting from i
+priority_queue<connection_dijkstra_t, vector<connection_dijkstra_t>, greater<connection_dijkstra_t>> dijkstra_q; /// priority queue for Dijkstra algorithm
+
+connection_t *connections() {
+    static connection_t ans[MAX_CONNECTIONS];
+    return ans;
+}
+
+vector<graph_id_t> *connections_from() {
+    static vector<graph_id_t> ans[MAX_NODES];
+    return ans;
+}
 
 cost_t min_cost[MAX_COUPONS+1][MAX_NODES]; /// min_cost[k][n] := minimal cost to reach node n with k coupons
 
@@ -72,8 +82,8 @@ void load_connection(graph_id_t connection_id) {
     int v, w, b, c;
     cin >> v >> w >> b >> c;
     connection_t new_connection {connection_id, v, w, b, c};
-    connections[connection_id] = new_connection;
-    connections_from[v].emplace_back(connection_id);
+    connections()[connection_id] = new_connection;
+    connections_from()[v].emplace_back(connection_id);
 }
 
 int main() {
@@ -112,9 +122,11 @@ int main() {
         }
         min_cost[0][current_node_data.second] = current_node_calculated_cost;
         // add following nodes to Dijkstra queue with calculated temporary cost
-        for(graph_id_t following_connection_id : connections_from[current_node_data.second]) {
-            const connection_t &following_connection = connections[following_connection_id];
-            dijkstra_q.emplace(current_node_calculated_cost + get_cost(following_connection), get_destination(following_connection));
+        for(graph_id_t following_connection_id : connections_from()[current_node_data.second]) {
+            const connection_t &following_connection = connections()[following_connection_id];
+            if(get_destination(following_connection) != current_node_data.second) {
+                dijkstra_q.emplace(current_node_calculated_cost + get_cost(following_connection), get_destination(following_connection));
+            }
         }
     }
 
@@ -143,12 +155,14 @@ int main() {
         }
         min_cost[current_k][current_node_id] = current_node_calculated_cost;
         // add following nodes to Dijkstra queue with calculated temporary cost
-        for(graph_id_t following_connection_id : connections_from[current_node_id]) {
-            const connection_t &following_connection = connections[following_connection_id];
-            cost_t cost_variant[2];
-            cost_variant[0] = min_cost[current_k][current_node_id] + get_cost(following_connection);
-            cost_variant[1] = min_cost[current_k-1][current_node_id] + get_discounted_cost(following_connection);
-            dijkstra_q.emplace(min(cost_variant[0], cost_variant[1]), get_destination(following_connection));
+        for(graph_id_t following_connection_id : connections_from()[current_node_id]) {
+            const connection_t &following_connection = connections()[following_connection_id];
+            if(get_destination(following_connection) != current_node_id) {
+                cost_t cost_variant[2];
+                cost_variant[0] = min_cost[current_k][current_node_id] + get_cost(following_connection);
+                cost_variant[1] = min_cost[current_k-1][current_node_id] + get_discounted_cost(following_connection);
+                dijkstra_q.emplace(min(cost_variant[0], cost_variant[1]), get_destination(following_connection));
+            }
         }
     }
 
