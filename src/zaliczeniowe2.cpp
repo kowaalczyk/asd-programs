@@ -2,6 +2,7 @@
 #include <vector>
 #include <queue>
 #include <tuple>
+#include <cassert>
 
 using namespace std;
 
@@ -45,7 +46,7 @@ const int MAX_COUPONS = 10;
 const graph_id_t MAX_CONNECTIONS = 1000000;
 const cost_t NODE_UNREACHABLE = -1;
 
-typedef tuple<graph_id_t, graph_id_t, graph_id_t, cost_t, cost_t> connection_t; /// := {connection_id, from_node, to_node, cost, discount}
+typedef tuple<graph_id_t, cost_t, cost_t> connection_t; /// := {to_node, cost, discount}
 typedef pair<cost_t, graph_id_t> connection_dijkstra_t; /// := {connection_temporary_cost, connection_id} for use in Dijkstra queue
 
 priority_queue<connection_dijkstra_t, vector<connection_dijkstra_t>, greater<connection_dijkstra_t>> dijkstra_q; /// priority queue for Dijkstra algorithm
@@ -67,28 +68,28 @@ int times_visited[MAX_NODES]; /// times_visited[n] := # of times node n was visi
 cost_t min_cost[MAX_COUPONS+1][MAX_NODES]; /// min_cost[k][n] := minimal cost to reach node n with k coupons
 
 cost_t get_cost(const connection_t &connection) {
-    return get<3>(connection);
+    return get<1>(connection);
 }
 
 cost_t get_discounted_cost(const connection_t &connection) {
-    return get<3>(connection) - get<4>(connection);
+    return get<1>(connection) - get<2>(connection);
 }
 
 graph_id_t get_destination(const connection_t &connection) {
-    return get<2>(connection);
+    return get<0>(connection);
 }
 
 void load_connection(graph_id_t connection_id) {
-    int v, w, b, c;
-    cin >> v >> w >> b >> c;
-    connection_t new_connection {connection_id, v, w, c, b};
+    int from, target, discount, cost;
+    cin >> from >> target >> discount >> cost;
+    connection_t new_connection {target, cost, discount};
     connections()[connection_id] = new_connection;
-    connections_from()[v].emplace_back(connection_id);
-    connections_to[w]++;
+    connections_from()[from].emplace_back(connection_id);
+    connections_to[target]++;
 }
 
-cost_t calc_discounted_cost(graph_id_t start_node_id, graph_id_t end_node_id, int discounts) {
-
+cost_t calc_discounted_cost(priority_queue<connection_dijkstra_t, vector<connection_dijkstra_t>, greater<connection_dijkstra_t>> &dijkstra_q, graph_id_t start_node_id, graph_id_t end_node_id, int discounts) {
+    assert(dijkstra_q.empty());
     dijkstra_q.emplace(0, start_node_id);
     while(!dijkstra_q.empty()) {
         // visit next node from queue
@@ -127,10 +128,12 @@ cost_t calc_discounted_cost(graph_id_t start_node_id, graph_id_t end_node_id, in
     for (int &i_visited : times_visited) {
         i_visited = 0;
     }
+    priority_queue<connection_dijkstra_t, vector<connection_dijkstra_t>, greater<connection_dijkstra_t>> empty;
+    swap(dijkstra_q, empty);
 }
 
 int main() {
-    ios_base::sync_with_stdio(false); // TODO: make sure this does not fuck up everything in functions above
+    ios_base::sync_with_stdio(false);
     // init arrays
     for(int i=0; i<MAX_NODES; i++) {
         for(int j=0; j<=MAX_COUPONS; j++) {
@@ -148,7 +151,7 @@ int main() {
         load_connection(connection_id);
     }
     // standard Dijkstra for calculating cost with 0 discount && checking whether last_node is reachable
-    calc_discounted_cost(first_node_id, last_node_id, 0);
+    calc_discounted_cost(dijkstra_q, first_node_id, last_node_id, 0);
     if(min_cost[0][last_node_id] == NODE_UNREACHABLE) {
         // node is unreachable after standard Dijkstra ==> there is no way to reach it in further iterations
         cout << -1 << endl;
@@ -156,7 +159,7 @@ int main() {
     }
     // if target node was reachable, calculate cost for more discounts
     for(int current_k = 1; current_k <= k; current_k++) {
-        calc_discounted_cost(first_node_id, last_node_id, current_k);
+        calc_discounted_cost(dijkstra_q, first_node_id, last_node_id, current_k);
     }
     cout << min_cost[k][last_node_id] << endl;
     return 0;
