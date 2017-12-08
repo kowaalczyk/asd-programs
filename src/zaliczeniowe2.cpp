@@ -82,12 +82,13 @@ cost_t dijkstra_search() {
 
     dijkstra_q.emplace(0, start_id);
     while(!dijkstra_q.empty()) {
-        // visiting node
-        connection_t current_data = dijkstra_q.top();
+        // visit node
+        connection_t current_data = dijkstra_q.top(); // <total cost of connection from start_id to node_id, node_id>
         dijkstra_q.pop();
         cost_t current_cost = current_data.first;
         graph_id_t current_node = current_data.second;
         visited[current_node] = true;
+
         // last node was reached, we can stop here
         if(level_pos(current_node) == end_id) {
             return current_cost;
@@ -105,7 +106,7 @@ cost_t dijkstra_search() {
 }
 
 int main() {
-    int n, m, k; // # of cities, # of connection_data, # of coupons
+    int n, m, k; // # of cities, # of connections, # of coupons
     cin >> n >> m >> k;
     create_graph(n, k);
     for(int i=0; i<m; i++) {
