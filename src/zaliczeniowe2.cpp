@@ -38,6 +38,18 @@ using namespace std;
  *
  */
 
+/*
+ * TODO: Try alternative solution:
+ *
+ * 1) For each city in input create (k+1) nodes in graph (for each level of discounts used to reach the node)
+ * 2) For each connection v->w for each level in 0..k create edge in the level and create an edge to higher level (representing more discounts used)
+ * 3) Run Dijkstra on this graph to reach all nodes in every level with optimal cost
+ * 4) Cots of last node in last level is the answer
+ *
+ */
+
+
+
 typedef int graph_id_t;
 typedef int cost_t;
 
@@ -82,7 +94,7 @@ void load_connection(graph_id_t connection_id) {
     int from, target, discount, cost;
     cin >> from >> target >> discount >> cost;
     connection_t new_connection {target, cost, discount};
-    connections()[connection_id] = new_connection;
+    swap(connections()[connection_id], new_connection);
     connections_from()[from].emplace_back(connection_id);
 }
 
