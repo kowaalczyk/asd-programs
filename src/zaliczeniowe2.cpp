@@ -2,6 +2,7 @@
 #include <vector>
 #include <queue>
 #include <cassert>
+#include <climits>
 
 using namespace std;
 
@@ -20,16 +21,17 @@ typedef int level_t;
 typedef int cost_t;
 typedef pair<cost_t, graph_id_t> connection_t; /// connection := <cost of connection, target node>
 
+const cost_t COST_MAX = INT_MAX;
 const graph_id_t MAX_NODES = 20000;
 const int MAX_COUPONS = 10;
 
+// graph representation
 level_t graph_max_level = 0; /// # of discount levels available (0 := no discounts, k := 0..k discounts can be used)
 graph_id_t graph_level_size = 0; /// size of each level
 vector<connection_t> connections_from[MAX_NODES*(MAX_COUPONS+1)]; /// connections_from[n] := vector of connections from node n
-priority_queue<connection_t, vector<connection_t>, greater<connection_t>> dijkstra_q; /// priority queue for Dijkstra algorithm
-graph_id_t start_id = -1; /// id of starting node in Dijkstra algorithm
-graph_id_t end_id = -1; /// id of finishing node in Dijkstra algorithm
-bool visited[MAX_NODES*(MAX_COUPONS+1)]; /// flag for visited nodes
+graph_id_t start_node = -1; /// id of starting node in Dijkstra algorithm
+graph_id_t end_node = -1; /// id of finishing node in Dijkstra algorithm
+cost_t total_cost[MAX_NODES*(MAX_COUPONS+1)]; /// total_cost[n] := total cost of reaching node n from start_node
 
 /// for a given city position, get its node within the graph on specified level
 graph_id_t graph_pos(graph_id_t node_id, level_t level) {
@@ -48,13 +50,8 @@ void create_graph(graph_id_t level_size, level_t levels) {
     // set variables
     graph_max_level = levels;
     graph_level_size = level_size;
-    start_id = 0;
-    end_id = level_size-1;
-    // reset variables
-    for(int i=0; i < graph_level_size*(graph_max_level+1); i++) {
-        visited[i] = false;
-        assert(connections_from[i].empty());
-    }
+    start_node = 0;
+    end_node = level_size-1;
 }
 
 /// read connection information from stdin and update graph data
@@ -76,29 +73,40 @@ void load_connection() {
 /// search for optimal path from start_id to end_id in a graph using Dijkstra algorithm
 cost_t dijkstra_search() {
     assert(graph_level_size > 0);
-    assert(start_id == 0);
-    assert(start_id >= 0);
-    assert(dijkstra_q.empty());
+    assert(start_node == 0);
+    assert(start_node >= 0);
 
-    dijkstra_q.emplace(0, start_id);
+    // set up containers
+    priority_queue<connection_t, vector<connection_t>, greater<connection_t>> dijkstra_q;
+    bool visited[graph_level_size*(graph_max_level+1)];
+    // reset variables
+    for(int i=0; i < graph_level_size*(graph_max_level+1); i++) {
+        visited[i] = false;
+        total_cost[i] = COST_MAX;
+    }
+    total_cost[start_node] = 0;
+    // begin Dikstra algorithm
+    dijkstra_q.emplace(0, start_node);
     while(!dijkstra_q.empty()) {
         // visit node
-        connection_t current_data = dijkstra_q.top(); // <total cost of connection from start_id to node_id, node_id>
+        connection_t current_data = dijkstra_q.top(); // <total cost of connection from start_node to node_id, node_id>
         dijkstra_q.pop();
         cost_t current_cost = current_data.first;
         graph_id_t current_node = current_data.second;
         visited[current_node] = true;
 
         // last node was reached, we can stop here
-        if(level_pos(current_node) == end_id) {
+        if(level_pos(current_node) == end_node) {
             return current_cost;
         }
 
         // add following nodes to queue
         for(connection_t connection : connections_from[current_node]) {
             graph_id_t following_node = connection.second;
-            if(!visited[following_node]) {
-                dijkstra_q.emplace(current_cost + connection.first, following_node);
+            cost_t following_cost = connection.first;
+            if(!visited[following_node] && total_cost[current_node] + following_cost < total_cost[following_node]) {
+                total_cost[following_node] = total_cost[current_node] + following_cost;
+                dijkstra_q.emplace(current_cost + following_cost, following_node);
             }
         }
     }
