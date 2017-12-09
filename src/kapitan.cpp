@@ -7,41 +7,36 @@
 
 using namespace std;
 
-/*
- * Chcemy znaleźć najszybszą drogę od wyspy 1 do wyspy n
- * Nie opłaca się płynąć po drodze A..B po drodze na której jest jakikolwiek punkt.
- *  ==> nie ważne czy omijamy wyspy:
- *  jeśli chcemy płynąć z A do B to jest to samo co płynięcie do najbliższej wg. x kropki
+/* (c) Krzysztof Kowalczyk k.kowaalczyk@gmail.com
  *
- *  - w danym punkcie wystarczy pamiętać najbliższy punkt względem współrzędnych x i y (4 punkty dla każdego punktu)
+ * Problem:
+ * Given n coordinates <x, y>, each pair representing an island on a map, find an optimal route between
+ * 1st and last island for a ship captain, with following assumptions:
+ * - ship can only swim along x or y axis
+ * - each time captain selects a person steering the ship: himself or a first officer
+ * - each time the ship turns, steering person changes
+ * - optimal route is the one that minimizes time of captain steering (assuming ship sails at constant speed)
  *
- *  Jeżeli nie mielibyśmy żadnych dwóch punktów na jednym odcinku, moglibyśmy zrobić Dijkstre
- *  - jak mamy linie możemy umówić się że płyniemy do najdalszego w linii wierzchołków
- *    , wrzucając do kolejki wszystkie minięte wierzchołki z linii
- *
- *  Impl:
- *  - dla każdego wierzchołka trzymamy 4 najbliżse wierzchołki, ale nie w standardowy sposób
- *    tylko w formie 2 wektorów wierzchołków - 1 posortowany wg. x, 2 posortowany wg. y
- *    O(nlogn) sortowanie na początku, potem w O(1) znajdowanie najbliższych
- *  - DecreaseKey na PriorityQueue w c++:
- *    - po prostu ściagamy wierzchołek i jeżeli nie jest znana dla niego odległość to
- *      wrzucacmy go jeszcze raz ze zmniejszonym kluczem
- *  - na początku w kolejce priorytetowej jest tylko start
- *  -
+ * Solution:
+ * - represent each island as a node within a graph
+ * - for each island calculate closest islands on each axis (in both directions) and create a graph edge between them
+ * - find an optimal route within such graph using standard Dijkstra algorithm:
+ *   this will minimize time of captain steering as we are always adding node with closest distance along one axis
+ * Time complexity: O(n*log(n))
  */
 
 const int N_MAX = 200000;
 
-typedef pair<int, int> coords; // {x, y} - coordinates
-typedef pair<int, coords> node; // {id, coords} - node
-typedef pair<int, int> node_with_distance; // {distance, id}
+typedef pair<int, int> coords; /// <x, y> - coordinates
+typedef pair<int, coords> node; /// <id, coords> - node
+typedef pair<int, int> node_with_distance; /// <distance, id> - container for Dijkstra queue
 
-node nodes[N_MAX+1]; // nodes sorted by id
-int distance_from_first[N_MAX+1]; // [i] := distance between 1st and i-th node
-vector<node> nodes_x; // nodes sorted by x
-vector<node> nodes_y; // nodes sorted by y
+node nodes[N_MAX+1]; /// nodes[i] := node with id i
+int distance_from_first[N_MAX+1]; /// distance_from_first[i] := distance between 1st and i-th node
+vector<node> nodes_x; /// nodes sorted by x coordinate
+vector<node> nodes_y; /// nodes sorted by y coordinate
 
-priority_queue<node_with_distance, vector<node_with_distance>, greater<node_with_distance>> Q;
+priority_queue<node_with_distance, vector<node_with_distance>, greater<node_with_distance>> Q; /// queue for Dijkstra algorithm
 
 bool compare_x(node lhs, node rhs) {
     coords l_coords = lhs.second;
@@ -85,6 +80,11 @@ int dist_diff_y(node p, node q) {
     }
 }
 
+/**
+ * Updates distance from source node to to_update, along axis depending on along_x boolean.
+ * If distance between nodes decreased, updated node will be added to Dijkstra queue.
+ * If calculated distance is smaller than min_distance, min_distancce and min_node will be updated to match updated node
+ */
 void update_distance(node source, node to_update, bool along_x, int &min_distance, node &min_node) {
     assert(node_id(to_update) >= 1 && node_id(to_update) <= N_MAX);
 
@@ -99,8 +99,8 @@ void update_distance(node source, node to_update, bool along_x, int &min_distanc
     }
 }
 
+/// updates distance to all neighbours and adds them to Dijkstra queue if necessary
 node closest_update_distance(node n) {
-    coords n_coords = n.second;
     node min_node;
     int min_dist = INT_MAX;
 
@@ -126,17 +126,17 @@ node closest_update_distance(node n) {
 int main() {
     // reset data
     for(int i=1; i<=N_MAX; i++) {
-        distance_from_first[i] = INT_MAX; // TODO: Make sure this value is ok for init
+        distance_from_first[i] = INT_MAX;
     }
 
     // load data
     int n;
-    cin >> n; // liczba wysp
+    cin >> n; // # of islands
     const int start_id = 1;
     const int end_id = n;
     for (int i=1; i<=n; i++) {
         int x, y;
-        cin >> x >> y; // współrzędne i-tej wyspy
+        cin >> x >> y; // # coordinates of i-th island
         node current_node(i, coords(x, y));
         nodes[i] = current_node;
         nodes_x.push_back(current_node);
@@ -153,9 +153,6 @@ int main() {
         Q.pop();
         node current_node = nodes[current_data.second];
         node closest = closest_update_distance(current_node);
-        if(closest.first == end_id) {
-            break;
-        }
     }
 
     cout << distance_from_first[end_id] << endl;
