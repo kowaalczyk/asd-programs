@@ -7,12 +7,21 @@
 using namespace std;
 
 /*
- * Alternative solution:
+ * (c) Krzysztof Kowalczyk k.kowaalczyk@gmail.com
  *
- * 1) For each city in input create (k+1) nodes in graph (for each level of discounts used to reach the node)
- * 2) For each connection v->w for each level in 0..k create edge in the level and create an edge to higher level (representing more discounts used)
- * 3) Run Dijkstra on this graph to reach all nodes in every level with optimal cost
- * 4) Cots of last node is the first cost calculated for last city on any level
+ * Problem:
+ * Find an optimal way of using k discounts to travel between city 0 and city (n-1),
+ * with given graph of connections between cities 0..n-1 (each with cost and possible discount).
+ *
+ * Solution:
+ * Given k possible discounts to be taken, we represent city as (k+1) nodes in a graph.
+ * Each connection between cities A, B will be represented as:
+ * - edge between nodes representing A and B on the same level, with weight equal to connection cost (1 edge per every level)
+ *   (traversing this edge represents taking a route from A to B without discount)
+ * - edge between node representing A on level l and node B on level l+1, with weight equal to discounted connection cost,
+ *   for l in 0..k-1 (traversing this edge represents taking a discount on the trip from A to B)
+ * Implementing a standard Dijkstra algorithm on such tree will efficiently calculate cost of reaching last city,
+ * with time complexity of O((n*k+m)*log(n*k)), where m is a number of connections.
  *
  */
 
@@ -76,17 +85,17 @@ cost_t dijkstra_search() {
     assert(start_node == 0);
     assert(start_node >= 0);
 
-    // set up containers
+    // set up
     priority_queue<connection_t, vector<connection_t>, greater<connection_t>> dijkstra_q;
     bool visited[graph_level_size*(graph_max_level+1)];
-    // reset variables
     for(int i=0; i < graph_level_size*(graph_max_level+1); i++) {
         visited[i] = false;
         total_cost[i] = COST_MAX;
     }
     total_cost[start_node] = 0;
-    // begin Dikstra algorithm
     dijkstra_q.emplace(0, start_node);
+
+    // Dijkstra algorithm
     while(!dijkstra_q.empty()) {
         // visit node
         connection_t current_data = dijkstra_q.top(); // <total cost of connection from start_node to node_id, node_id>
@@ -95,7 +104,7 @@ cost_t dijkstra_search() {
         graph_id_t current_node = current_data.second;
         visited[current_node] = true;
 
-        // last node was reached, we can stop here
+        // visiting a node corresponding to last city (no matter on which level) means that it was an optimal route
         if(level_pos(current_node) == end_node) {
             return current_cost;
         }
@@ -104,12 +113,15 @@ cost_t dijkstra_search() {
         for(connection_t connection : connections_from[current_node]) {
             graph_id_t following_node = connection.second;
             cost_t following_cost = connection.first;
-            if(!visited[following_node] && total_cost[current_node] + following_cost < total_cost[following_node]) {
-                total_cost[following_node] = total_cost[current_node] + following_cost;
+            if(!visited[following_node] && current_cost + following_cost < total_cost[following_node]) {
+                // optimized adding: following node will not be added to queue if it doesn't reduce cost
+                total_cost[following_node] = current_cost + following_cost;
                 dijkstra_q.emplace(current_cost + following_cost, following_node);
             }
         }
     }
+
+    // last_node was not reached - function would have returned from loop if it did
     return -1;
 }
 
