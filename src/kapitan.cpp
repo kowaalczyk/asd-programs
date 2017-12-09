@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <queue>
 #include <climits>
+#include <cassert>
 
 using namespace std;
 
@@ -33,13 +34,14 @@ const int N_MAX = 200000;
 
 typedef pair<int, int> coords; // {x, y} - coordinates
 typedef pair<int, coords> node; // {id, coords} - node
+typedef pair<int, int> node_with_distance; // {distance, id}
 
 node nodes[N_MAX+1]; // nodes sorted by id
 int distance_from_first[N_MAX+1]; // [i] := distance between 1st and i-th node
 vector<node> nodes_x; // nodes sorted by x
 vector<node> nodes_y; // nodes sorted by y
 
-priority_queue<node, vector<node>, greater<node>> Q; // TODO: Q of node_with_distance
+priority_queue<node_with_distance, vector<node_with_distance>, greater<node_with_distance>> Q;
 
 bool compare_x(node lhs, node rhs) {
     coords l_coords = lhs.second;
@@ -83,28 +85,42 @@ int dist_diff_y(node p, node q) {
     }
 }
 
+void update_distance(node source, node to_update, bool along_x, int &min_distance, node &min_node) {
+    assert(node_id(to_update) >= 1 && node_id(to_update) <= N_MAX);
+
+    int old_distance = distance_from_first[node_id(to_update)];
+    int distance_diff = along_x ? dist_diff_x(source, to_update) : dist_diff_y(source, to_update);
+    int new_distance = distance_from_first[node_id(source)] + distance_diff;
+    if(new_distance < old_distance) {
+        distance_from_first[node_id(to_update)] = new_distance;
+        Q.emplace(new_distance, to_update.first);
+        min_distance = new_distance;
+        min_node = to_update;
+    }
+}
+
 node closest_update_distance(node n) {
     coords n_coords = n.second;
-    int n_distance = distance_from_first[node_id(n)];
+    node min_node;
+    int min_dist = INT_MAX;
 
-    auto pos_x = lower_bound(nodes_x.begin(), nodes_x.end(), n_coords);
-    node before_x = *(pos_x-1);
-    int before_old_distance = distance_from_first[node_id(before_x)];
-    int before_new_distance = distance_from_first[node_id(n)] + dist_diff_x(n, before_x);
-    if(before_new_distance < before_old_distance) {
-        distance_from_first[node_id(before_x)] = before_new_distance;
-        Q.push(before_x); // TODO: Make sure pushing nodes to Q only when distance is lesser is ok
+    auto pos_x = lower_bound(nodes_x.begin(), nodes_x.end(), n, compare_x);
+    if(pos_x != nodes_x.begin()) {
+        update_distance(n, *(pos_x-1), true, min_dist, min_node);
     }
-    // TODO: Move to separate function
-    // TODO: Finish from here (other closest nodes)
+    if(pos_x != nodes_x.end()-1) {
+        update_distance(n, *(pos_x+1), true, min_dist, min_node);
+    }
 
-    node after_x = *(pos_x+1);
+    auto pos_y = lower_bound(nodes_y.begin(), nodes_y.end(), n, compare_y);
+    if(pos_y != nodes_y.begin()) {
+        update_distance(n, *(pos_y-1), false, min_dist, min_node);
+    }
+    if(pos_y != nodes_y.end()-1) {
+        update_distance(n, *(pos_y+1), false, min_dist, min_node);
+    }
 
-
-    auto pos_y = lower_bound(nodes_y.begin(), nodes_y.end(), n_coords);
-    node before_y = *(pos_y-1);
-    node after_y = *(pos_y+1);
-    node mins[4] = {before_x, after_x, before_y, after_y};
+    return min_node;
 }
 
 int main() {
@@ -112,13 +128,12 @@ int main() {
     for(int i=1; i<=N_MAX; i++) {
         distance_from_first[i] = INT_MAX; // TODO: Make sure this value is ok for init
     }
+
     // load data
     int n;
     cin >> n; // liczba wysp
     const int start_id = 1;
     const int end_id = n;
-    nodes_x.reserve(n);
-    nodes_y.reserve(n);
     for (int i=1; i<=n; i++) {
         int x, y;
         cin >> x >> y; // współrzędne i-tej wyspy
@@ -130,19 +145,19 @@ int main() {
     sort(nodes_x.begin(), nodes_x.end(), compare_x);
     sort(nodes_y.begin(), nodes_y.end(), compare_y);
 
+    // Dijkstra
     distance_from_first[start_id] = 0;
-    Q.push(nodes[start_id]);
+    Q.emplace(0, start_id);
     while (!Q.empty()) {
-        // get first node
-        node current_node = Q.top();
+        auto current_data = Q.top();
         Q.pop();
-
-        // get closest node to current_node
-
-        // set distance to closest node
-
-        // if distance to last_node was just calculated, break
+        node current_node = nodes[current_data.second];
+        node closest = closest_update_distance(current_node);
+        if(closest.first == end_id) {
+            break;
+        }
     }
 
+    cout << distance_from_first[end_id] << endl;
     return 0;
 }
