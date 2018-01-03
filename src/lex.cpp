@@ -34,7 +34,7 @@ void process_word(int word_size) {
     }
 
     // further levels
-    for(int i=1; i<=size_log; i++) { // TODO: \gt or \geq ?
+    for(int i=1; i<=size_log; i++) { // TODO: TOO SLOW !!!
         vector<tuple<int, int, int>> prev_order;
         int prev_length = pow_2(i-1);
         for(int j=0; j<word_size; j++) {
