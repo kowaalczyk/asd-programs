@@ -2,7 +2,6 @@
 #include <vector>
 #include <tuple>
 #include <algorithm>
-#include <cassert>
 
 using namespace std;
 
@@ -15,7 +14,6 @@ int order[N_LOG_MAX][N_MAX]; /// order[subword_length][subword_start_pos] := i <
 
 /// returns floor of log_2(x)
 inline int log_floor(int x) {
-    assert(x>0);
     int ans = 0;
     while (x >>= 1) ++ans;
     return ans;
@@ -23,13 +21,11 @@ inline int log_floor(int x) {
 
 /// returns 2^x
 inline int pow_2(int x) {
-    assert(x>=0);
     return (x > 0 ? 2<<(x-1) : 1);
 }
 
 /// populates order array for faster comparison of word substrings, requires word to be loaded.
 void process_word(int word_size) {
-    assert(word != "");
     int size_log = log_floor(word_size);
 
     // level 0
@@ -50,7 +46,7 @@ void process_word(int word_size) {
         for(int j=0; j<word_size; j++) {
             int order_index = get<2>(prev_order.at((unsigned int)j));
             if(j>0) {
-                if(get<0>(prev_order.at((unsigned int)(j))) == get<0>(prev_order.at((unsigned int)(j-1))) && get<0>(prev_order.at((unsigned int)(j))) == get<0>(prev_order.at((unsigned int)(j-1)))) {
+                if(get<0>(prev_order.at((unsigned int)(j))) == get<0>(prev_order.at((unsigned int)(j-1))) && get<1>(prev_order.at((unsigned int)(j))) == get<1>(prev_order.at((unsigned int)(j-1)))) {
                     // new order position is same as for previous element because they are equal
                 } else {
                     current_order_position++;
@@ -67,18 +63,11 @@ char lex_compare(int a, int b, int c, int d) {
     int len_left = b-a+1;
     int len_right = d-c+1;
 
-    assert(0 < len_left);
-    assert(0 < len_right);
-
     int left_logfloor = log_floor(len_left);
     int right_logfloor = log_floor(len_right);
-
     int min_level = min(left_logfloor, right_logfloor);
     int min_level_length = pow_2(min_level);
     int min_level_cmp = order[min_level][a] - order[min_level][c];
-
-    assert(min_level_length <= len_left);
-    assert(min_level_length <= len_right);
 
     if(min_level_cmp < 0) {
         return '<';
@@ -101,7 +90,6 @@ char lex_compare(int a, int b, int c, int d) {
 
 int main() {
     ios_base::sync_with_stdio(false);
-
     // init order array
     for (auto &i : order) {
         for (int &j : i) {
@@ -112,11 +100,8 @@ int main() {
     int n, m;
     cin >> n >> m;
     cin >> word;
-
     // prepare word for queries
-    assert(word.length() == (unsigned int)n);
     process_word(n);
-
     // load queries and print answers
     for(int i=0; i<m; i++) {
         int a, b, c, d;
