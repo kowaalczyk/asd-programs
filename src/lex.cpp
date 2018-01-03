@@ -40,14 +40,14 @@ void process_word(int word_size) {
         for(int j=0; j<word_size; j++) {
             prev_order.emplace_back(order[i-1][j], order[i-1][j+prev_length], j);
         }
-        sort(prev_order.begin(), prev_order.end());
+        sort(prev_order.begin(), prev_order.end()-pow_2(i)+1);
 
         int current_order_position = 0; // position of currently accessed word =
         for(int j=0; j<word_size; j++) {
             int order_index = get<2>(prev_order.at((unsigned int)j));
             if(j>0) {
                 if(get<0>(prev_order.at((unsigned int)(j))) == get<0>(prev_order.at((unsigned int)(j-1))) && get<1>(prev_order.at((unsigned int)(j))) == get<1>(prev_order.at((unsigned int)(j-1)))) {
-                    // new order position is same as for previous element because they are equal
+                    // current order position is same as for previous element because they are equal
                 } else {
                     current_order_position++;
                 }
