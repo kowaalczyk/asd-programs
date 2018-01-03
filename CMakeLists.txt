@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
+set (LEX src/lex.cpp)
 set (KAPITAN src/kapitan.cpp)
 set (ZALICZENIOWE_2 src/zaliczeniowe2.cpp)
 set (PROJEKTY src/projekty.cpp)
@@ -18,6 +19,7 @@ set (VAR_SIZE src/var-size.c)
 set(CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wall")
 
+add_executable(lex_sort ${LEX})
 add_executable(kapitan ${KAPITAN})
 add_executable(zaliczeniowe2 ${ZALICZENIOWE_2})
 add_executable(projekty ${PROJEKTY})
