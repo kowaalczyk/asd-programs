@@ -2,7 +2,7 @@
 // Created by kowal on 26.01.18.
 //
 
-#include <iostream>
+#include <cstdio>
 #include <queue>
 #include <unordered_map>
 
@@ -15,13 +15,13 @@ unordered_map<size_t, size_t> count;
 
 int main() {
     size_t n;
-    cin >> n;
+    scanf("%zu", &n);
 
     size_t uniq_count = 0;
 
     for (size_t i=0; i<n; i++) {
         height_t tmp;
-        cin >> tmp;
+        scanf("%lu", &tmp);
 
         if(count[tmp] == 0) {
             uniq_count++;
@@ -31,10 +31,10 @@ int main() {
     }
 
     size_t m;
-    cin >> m;
+    scanf("%zu", &m);
     for(size_t i=0; i<m; i++) {
         size_t k;
-        cin >> k;
+        scanf("%zu", &k);
 
         size_t done = 0;
         while(done < k) {
@@ -73,7 +73,7 @@ int main() {
             }
             count[bigger_part]+=currently_removed;
         }
-        cout << uniq_count << endl;
+        printf("%zu\n", uniq_count);
     }
 
     return 0;
