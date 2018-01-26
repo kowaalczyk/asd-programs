@@ -20,7 +20,6 @@ set(CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wall")
 
 # assignments
-
 add_executable(lex_sort ${LEX})
 add_executable(kapitan ${KAPITAN})
 add_executable(zaliczeniowe2 ${ZALICZENIOWE_2})
@@ -40,6 +39,7 @@ add_executable(suma_kwadratow src/playground/suma_kwadratow.cpp)
 add_executable(estetyczne_ciagi src/playground/estetyczne_ciagi.cpp)
 add_executable(wzniesienia src/playground/wzniesienia.cpp)
 add_executable(zetony src/playground/zetony.cpp)
+add_executable(zolnierze src/playground/zolnierze.cpp)
 
 add_executable(interval_tree_impl ${INT_TREE_IMPL})
 add_executable(testy_drzewa ${TEST_INT_TREE})
