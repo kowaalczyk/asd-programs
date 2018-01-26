@@ -5,7 +5,6 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
-#include <set>
 #include <unordered_map>
 
 using namespace std;
@@ -13,35 +12,15 @@ using namespace std;
 typedef int_fast32_t weight_t;
 typedef int_fast32_t node_t;
 
-set<pair<weight_t, size_t>> G[500001]; // G[i] := set<weight, # of neighbours with such weight>
-//unordered_map<weight_t, size_t> G[500001];
+unordered_map<weight_t, size_t> G[500001];
 size_t total_edges[500001]; // total_edges[i] := # of all edges at node i
 
 
 /// mark node v as a neighbour of u with weight w, and calculate new bumps at node u
 size_t insert_count_new_bumps(node_t u, node_t v, weight_t w) {
-    auto possible_pos = lower_bound(G[u].begin(), G[u].end(), pair<weight_t, size_t >(w, 0));
-
-    if(possible_pos != G[u].end() && (*possible_pos).first == w) {
-        // nodes u already has a neighbour with weight w
-
-        // update count in a current node
-        size_t new_count = (*possible_pos).second+1;
-        possible_pos = G[u].erase(possible_pos);
-        G[u].emplace_hint(possible_pos, w, new_count);
-        total_edges[u]++;
-
-        // new node creates a bump with each edge of different weight
-        return total_edges[u] - new_count;
-    }
-    // node u has no neighbour with weight w
-
-    // insert new weight into the set of neighbours
-    G[u].emplace_hint(possible_pos, w, 1);
+    G[u][w]++;
     total_edges[u]++;
-
-    // new node creates a bump with each of the previous edges
-    return total_edges[u]-1;
+    return total_edges[u] - G[u][w];
 }
 
 int main() {
