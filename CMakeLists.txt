@@ -39,6 +39,7 @@ add_executable(check_variable_sizes ${VAR_SIZE})
 add_executable(suma_kwadratow src/playground/suma_kwadratow.cpp)
 add_executable(estetyczne_ciagi src/playground/estetyczne_ciagi.cpp)
 add_executable(wzniesienia src/playground/wzniesienia.cpp)
+add_executable(zetony src/playground/zetony.cpp)
 
 add_executable(interval_tree_impl ${INT_TREE_IMPL})
 add_executable(testy_drzewa ${TEST_INT_TREE})
