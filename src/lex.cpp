@@ -51,7 +51,6 @@ void process_word(int word_size) {
                 } else {
                     current_order_position++;
                 }
-
             }
             order[i][order_index] = current_order_position;
         }
