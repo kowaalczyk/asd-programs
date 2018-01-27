@@ -41,6 +41,9 @@ add_executable(wzniesienia src/playground/wzniesienia.cpp)
 add_executable(zetony src/playground/zetony.cpp)
 add_executable(zolnierze src/playground/zolnierze.cpp)
 
+# exam
+add_executable(perly src/exam/perly.cpp)
+
 add_executable(interval_tree_impl ${INT_TREE_IMPL})
 add_executable(testy_drzewa ${TEST_INT_TREE})
 #add_dependencies(testy_drzewa interval_tree_impl)
