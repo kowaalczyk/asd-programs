@@ -42,6 +42,7 @@ add_executable(zetony src/playground/zetony.cpp)
 add_executable(zolnierze src/playground/zolnierze.cpp)
 add_executable(jedynki src/playground/jedynki.cpp)
 add_executable(roznica src/playground/roznica.cpp)
+add_executable(odcinki src/playground/odcinki.cpp)
 
 # exam
 add_executable(perly src/exam/perly.cpp)

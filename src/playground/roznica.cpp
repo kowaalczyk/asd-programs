@@ -22,20 +22,20 @@ int main() {
         auto possible_ans = nums.find(tmp+d);
         if(possible_ans != nums.end()) {
             printf("%d %d\n", *possible_ans, tmp);
-            found = true;
-            break;
-        }
-        possible_ans = nums.find(tmp-d);
-        if(possible_ans != nums.end()) {
-            printf("%d %d\n", tmp, *possible_ans);
-            found = true;
-            break;
-        }
-        nums.emplace(tmp);
-    }
-    if(!found) {
-        printf("NIE\n");
-    }
+    found = true;
+    break;
+}
+possible_ans = nums.find(tmp-d);
+if(possible_ans != nums.end()) {
+printf("%d %d\n", tmp, *possible_ans);
+found = true;
+break;
+}
+nums.emplace(tmp);
+}
+if(!found) {
+printf("NIE\n");
+}
 
-    return 0;
+return 0;
 }
