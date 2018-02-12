@@ -10,27 +10,30 @@
 using namespace std;
 
 int main() {
-    int n;
-    scanf("%d", &n);
+    unsigned long n;
+    scanf("%lu", &n);
 
-    set<tuple<int, int, int>, less<tuple<int, int, int>>> lines;
+    vector<tuple<int, int, int>> lines;
+    lines.reserve(n);
     for(int i=0; i<n; i++) {
         int x, y1, y2;
         scanf("%d %d %d", &x, &y1, &y2);
-        lines.emplace(x, y1, y2);
+        lines.emplace_back(x, y1, y2);
     }
 
-    long ans = 0;
+    sort(lines.begin(), lines.end());
+
+    unsigned long long ans = 0;
     for(auto line = lines.begin(); line != lines.end(); line++) {
-        auto first_not_cressed_line = lines.lower_bound(tuple<int, int, int>(
+        auto first_not_crossed_line = lower_bound(line, lines.end(), tuple<int, int, int>(
                 get<0>(*line),
                 get<2>(*line),
                 get<2>(*line)
         ));
 
-        ans = ans + distance(line, first_not_cressed_line) - 1;
+        ans = ans + distance(line, first_not_crossed_line) - 1;
     }
 
-    printf("%li\n", ans);
+    printf("%llu\n", ans);
     return 0;
 }
