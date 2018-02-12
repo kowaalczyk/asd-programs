@@ -18,7 +18,6 @@ int main() {
     for(int i=0; i<n; i++) {
         int tmp;
         scanf("%d", &tmp);
-        nums.emplace(tmp);
 
         auto possible_ans = nums.find(tmp+d);
         if(possible_ans != nums.end()) {
@@ -32,6 +31,7 @@ int main() {
             found = true;
             break;
         }
+        nums.emplace(tmp);
     }
     if(!found) {
         printf("NIE\n");
