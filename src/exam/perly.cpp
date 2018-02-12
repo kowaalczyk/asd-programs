@@ -6,97 +6,89 @@
 #include <set>
 #include <vector>
 #include <algorithm>
-#include <unordered_set>
-#include <cstring>
 
 using namespace std;
 
 typedef uint64_t val_t;
 
-vector<tuple<val_t, size_t, size_t>> pearl_sets; // value, start pos, end pos
+vector<val_t> pearls;
+val_t best_results[4][100000];
+bool calculated[4][2][1000000];
 
-val_t best_possible(vector<tuple<val_t, size_t, size_t>>::const_iterator begin,
-                    vector<tuple<val_t, size_t, size_t>>::const_iterator end,
-                    bool taken_three,
-                    vector<bool> used)
+val_t best_possible(size_t begin,
+                    size_t end,
+                    size_t last_taken,
+                    bool taken_three)
 {
+    if(calculated[last_taken][begin]) {
+        return best_results[last_taken][begin];
+    }
+
+    if(begin > end) {
+        return 0;
+    }
+
     val_t ans = 0;
-
-    for(auto ps = begin; ps != end; ps++) {
-        int insertable = true;
-        size_t int_len = get<2>(*ps) - get<1>(*ps) + 1;
-
-        for(val_t i = get<1>(*ps)-1; i <= get<2>(*ps)+1; i++) {
-            if(used[i]) {
-                insertable = false;
-                break;
-            }
+    if(last_taken >= 3) {
+        ans = best_possible(begin+1, end, 0, true);
+        if(best_results[last_taken][begin] == -1) {
+            best_results[last_taken][begin] = ans;
+            calculated[last_taken][taken_three][begin] = true;
         }
-        if(insertable && int_len == 3 && taken_three) {
-            insertable = false;
-        }
-        if(insertable) {
-            if(int_len > 1) {
-                // calculate max without inserted element
-                val_t max_not_inserted = best_possible(ps+1, end, taken_three, used);
-
-                // calculate max with inserted element
-                if(int_len == 3) {
-                    taken_three = true;
+        return ans;
+    } else {
+        if(last_taken == 2) {
+            if(taken_three) {
+                ans = best_possible(begin+1, end, 0, true);
+                if(best_results[last_taken][begin] == -1) {
+                    best_results[last_taken][begin] = ans;
+                    calculated[last_taken][taken_three][begin] = true;
                 }
-                for(val_t i = get<1>(*ps); i <= get<2>(*ps); i++) {
-                    used[i] = true;
-                }
-
-                val_t max_inserted = best_possible(ps+1, end, taken_three, move(used));
-
-                // make best possible decision and return recursive result
-                if(max_inserted + get<0>(*ps) >= max_not_inserted) {
-                    return ans + max_inserted + get<0>(*ps);
-                } else {
-                    return ans + max_not_inserted;
-                }
+                return ans;
             } else {
-                ans += get<0>(*ps);
-                for(val_t i = get<1>(*ps); i <= get<2>(*ps); i++) {
-                    used[i] = true;
+                val_t with_3 = best_possible(begin+1, end, 3, true) + pearls[begin];
+                val_t without_3 = best_possible(begin+1, end, 0, false);
+
+                ans = max(with_3, without_3);
+                if(best_results[last_taken][begin] == -1) {
+                    best_results[last_taken][begin] = ans;
+                    calculated[last_taken][taken_three][begin] = true;
                 }
+                return ans;
             }
+        } else {
+            // taken <= 2
+            val_t with_begin = best_possible(begin+1, end, last_taken+1, taken_three) + pearls[begin];
+            val_t without_begin = best_possible(begin+1, end, 0, taken_three);
+
+            ans = max(with_begin, without_begin);
+            if(best_results[last_taken][begin] == -1) {
+                best_results[last_taken][begin] = ans;
+                calculated[last_taken][taken_three][begin] = true;
+            }
+            return ans;
         }
     }
-    return ans;
 }
 
 int main() {
     size_t n;
     scanf("%zu", &n);
 
-    pearl_sets.resize(3*n);
-    val_t prev_val = 0;
-    val_t prev_val_2 = 0;
-    for (size_t i=1; i<=n; i++) { // positions indexed from 1 to n
+    pearls.reserve(n);
+    for(int i=0; i<n; i++) {
         val_t tmp;
         scanf("%lu", &tmp);
 
-        pearl_sets.emplace_back(tmp, i, i);
-        if(i > 1) {
-            pearl_sets.emplace_back(tmp+prev_val, i-1, i);
+        pearls.push_back(tmp);
+        for(int j=0; j<4; j++) {
+            best_results[j][i] = 0;
+            calculated[j][0][i] = false;
+            calculated[j][1][i] = false;
         }
-        if(i > 2) {
-            pearl_sets.emplace_back(tmp+prev_val+prev_val_2, i-2, i);
-        }
-        prev_val_2 = prev_val;
-        prev_val = tmp;
     }
 
-    sort(pearl_sets.begin(), pearl_sets.end(), std::greater<tuple<val_t, size_t, size_t>>());
-
-    val_t ans = 0;
-    bool taken_three = false;
-    vector<bool> used;
-    used.resize(n+2);
-
-    ans = best_possible(pearl_sets.begin(), pearl_sets.end(), false, move(used));
+    val_t ans = best_possible(0, n-1, 0, false);
 
     printf("%lu\n", ans);
     return 0;
