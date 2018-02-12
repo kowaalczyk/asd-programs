@@ -40,6 +40,7 @@ add_executable(estetyczne_ciagi src/playground/estetyczne_ciagi.cpp)
 add_executable(wzniesienia src/playground/wzniesienia.cpp)
 add_executable(zetony src/playground/zetony.cpp)
 add_executable(zolnierze src/playground/zolnierze.cpp)
+add_executable(jedynki src/playground/jedynki.cpp)
 
 # exam
 add_executable(perly src/exam/perly.cpp)
