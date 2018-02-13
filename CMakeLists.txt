@@ -45,6 +45,7 @@ add_executable(roznica src/playground/roznica.cpp)
 add_executable(odcinki src/playground/odcinki.cpp)
 add_executable(szyna src/playground/szyna.cpp)
 add_executable(kolorowe_grafy src/playground/kolorowe_grafy.cpp)
+add_executable(skierowanie src/playground/skierowanie.cpp)
 
 # exam
 add_executable(perly src/exam/perly.cpp)
