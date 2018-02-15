@@ -48,6 +48,7 @@ add_executable(kolorowe_grafy src/playground/kolorowe_grafy.cpp)
 add_executable(skierowanie src/playground/skierowanie.cpp)
 add_executable(parking src/playground/parking.cpp)
 add_executable(naszyjniki src/playground/naszyjniki.cpp)
+add_executable(podciagi_rosnace src/playground/podciagi_rosnace.cpp)
 
 # exam
 add_executable(perly src/exam/perly.cpp)
