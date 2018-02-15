@@ -51,6 +51,7 @@ add_executable(naszyjniki src/playground/naszyjniki.cpp)
 add_executable(podciagi_rosnace src/playground/podciagi_rosnace.cpp)
 add_executable(jazda_w_kolko src/playground/jazda_w_kolko.cpp)
 add_executable(przedzialy src/playground/przedzialy.cpp)
+add_executable(roznica2 src/playground/roznica2.cpp)
 
 # exam
 add_executable(perly src/exam/perly.cpp)
