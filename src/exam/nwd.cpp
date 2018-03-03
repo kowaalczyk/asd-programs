@@ -35,32 +35,35 @@ int nwd(int a, int b) {
     }
 }
 
-int n;
+unsigned int n;
 set<int> s; // val, nwd_without_val
-int current_nwd = 0;
+unsigned int current_nwd = 0;
 
 int main() {
-    ios_base::sync_with_stdio(false);
-    cin.tie(0);
-    cin >> n;
+    scanf("%u\n", &n);
     for(int i=0; i<n; i++) {
-        int val;
+        unsigned int val;
         char op;
-        cin >> op >> val;
-        cout << op << val;
+        scanf("%c %u\n", &op, &val);
         if(op == '+') {
-            int nwd_without_val = current_nwd;
-            current_nwd = nwd(nwd_without_val, val);
-
+            if(s.empty()) {
+                current_nwd = val;
+            } else {
+                int nwd_without_val = current_nwd;
+                current_nwd = nwd(nwd_without_val, val);
+            }
             s.emplace(val);
         } else {
             s.erase(val);
-            current_nwd = 0;
+            current_nwd = *(s.begin());
             for(auto it = s.begin(); it != s.end(); i++) {
                 current_nwd = nwd(current_nwd, *it);
+                if(current_nwd == 1) {
+                    break;
+                }
             }
         }
-        printf("%d\n", current_nwd);
+        printf("%u\n", current_nwd);
     }
     return 0;
 }
