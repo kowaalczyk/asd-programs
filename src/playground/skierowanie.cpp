@@ -8,7 +8,8 @@
 using namespace std;
 
 
-int n, m;
+int m;
+unsigned long n;
 
 unordered_set<int> G[500001];
 int depth[500001];

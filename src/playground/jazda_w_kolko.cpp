@@ -8,7 +8,8 @@
 using namespace std;
 
 
-int n, m;
+int m;
+unsigned long n;
 vector<int>G[200001];
 bool visited[200001];
 

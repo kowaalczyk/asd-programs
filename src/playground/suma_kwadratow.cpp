@@ -1,77 +1,59 @@
 #include <iostream>
-#include <tuple>
 #include <set>
+#include <cassert>
 
 
 using namespace std;
 
-typedef pair<int, int64_t > elem_data_t;
+typedef pair<uint32_t, uint64_t> elem_data_t;
+set<elem_data_t> s;
 
 int main() {
-    // ios_base::sync_with_stdio(false);
     int n;
-    cin >> n;
+    scanf("%d", &n);
+    uint64_t ans = 0;
+    for(int i=0; i<n; i++) {
+        int val;
+        scanf("%d", &val);
 
-    // structure to hold elements
-    int64_t  sum = 0;
-    set<elem_data_t> pos; // position, inserted value, (value-prev_value)^2
-
-    // guards at the beginning
-    pos.emplace(0, 0);
-
-    for (int i = 0; i < n; i++) {
-        int k;
-        cin >> k;
-
-        auto ins_pair = pos.emplace(k, 0); // k is unique so we will have it in a good order
-        auto iter = ins_pair.first; // set::iterator
-
-        // base case
-        auto curr_iter = iter;
-        auto prev_iter = iter;
-        prev_iter--;
-        auto next_iter = iter;
-        next_iter++;
-        auto past_next_iter = next_iter;
-        past_next_iter++;
-
-        elem_data_t prev_element = *(prev_iter);
-        elem_data_t curr_element = *(iter);
-        elem_data_t next_element = *(next_iter);
-
-        int64_t  decrease_by = 0;
-        int64_t increase_by = 0;
-
-        if (prev_iter != pos.begin()) {
-            // for a first not-guard element, square should always be 0
-
-            // update square for current value by removing and adding item
-            get<1>(curr_element) = (get<0>(curr_element) - get<0>(prev_element))
-                                   * (get<0>(curr_element) - get<0>(prev_element));
-            curr_iter = pos.erase(curr_iter);
-            pos.insert(curr_iter, curr_element);
-
-            increase_by += get<1>(curr_element);
+        auto ret_data = s.emplace(val, 0);
+        auto pos_iter = ret_data.first;
+        auto prev_iter = pos_iter;
+        if(pos_iter != s.begin()) {
+            prev_iter--;
+            // pos iter at inserted element, prev_iter at previous one
+            assert((*pos_iter).first > (*prev_iter).first);
+            uint64_t new_second = ((*pos_iter).first - (*prev_iter).first)*((*pos_iter).first - (*prev_iter).first);
+            s.erase(pos_iter);
+            ret_data = s.emplace(val, new_second);
+            ans += new_second;
+            prev_iter = ret_data.first;
+            pos_iter = ret_data.first;
+            pos_iter++;
+            if(pos_iter != s.end()) {
+                // pos iter at element after inserted, prev iter at inserted
+                assert((*pos_iter).first > (*prev_iter).first);
+                ans -= (*pos_iter).second;
+                uint64_t new_second = ((*pos_iter).first - (*prev_iter).first)*((*pos_iter).first - (*prev_iter).first);
+                uint32_t tmp_first = (*pos_iter).first;
+                s.erase(pos_iter);
+                s.emplace(tmp_first, new_second);
+                ans += new_second;
+            }
+        } else {
+            pos_iter++;
+            if(pos_iter != s.end()) {
+                // pos iter at element after inserted, prev iter at inserted, but this time previous value is not subtracted
+                assert((*pos_iter).first > (*prev_iter).first);
+                uint64_t new_second = ((*pos_iter).first - (*prev_iter).first)*((*pos_iter).first - (*prev_iter).first);
+                uint32_t tmp_first = (*pos_iter).first;
+                s.erase(pos_iter);
+                s.emplace(tmp_first, new_second);
+                ans += new_second;
+            }
         }
-
-        if (next_iter != pos.end()) {
-            // updating square only for existing elements
-
-            decrease_by = get<1>(next_element); // calculate previous square to subtract later
-
-            // update new square for next element by removing and adding item
-            get<1>(next_element) = (get<0>(next_element) - get<0>(curr_element))
-                                 * (get<0>(next_element) - get<0>(curr_element));
-            next_iter = pos.erase(next_iter);
-            pos.insert(next_iter, next_element);
-
-            increase_by += get<1>(next_element);
-        }
-
-        // update and print result
-        sum = sum + increase_by - decrease_by ;
-        if(i>0){
-            cout << sizeof(int64_t) << endl;
+        if(i > 0) {
+            printf("%lu\n", ans);
         }
     }
 

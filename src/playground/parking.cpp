@@ -11,7 +11,8 @@ using namespace std;
 
 
 
-int n, m;
+int m;
+unsigned long n;
 vector<int> G[500001];
 bool visited[500001];
 bool parked[500001];

@@ -9,7 +9,8 @@
 
 using namespace std;
 
-int n, m; // nodes, edges
+int m;
+unsigned long n; // nodes, edges
 vector<pair<int, bool>> G[500001]; // <node, color>
 int dist[500001][2]; // dist[node][color] -1 | distance from 1
 queue<pair<int, bool>> q; // <node, reaching color>

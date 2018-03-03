@@ -9,7 +9,8 @@
 using namespace std;
 
 
-int n, d;
+int d;
+unsigned long n;
 unordered_set<int> used;
 unordered_set<int> diff; // contains elements that are different by d
 
