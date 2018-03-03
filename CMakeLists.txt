@@ -53,8 +53,20 @@ add_executable(jazda_w_kolko src/playground/jazda_w_kolko.cpp)
 add_executable(przedzialy src/playground/przedzialy.cpp)
 add_executable(roznica2 src/playground/roznica2.cpp)
 
+# hackerrank
+add_executable(sorted-subsegments src/hackerrank-challenges/sorted-subsegments.cpp)
+add_executable(exam-rush src/hackerrank-challenges/exam-rush.cpp)
+add_executable(server-room-safety src/hackerrank-challenges/server-room-safety.cpp)
+add_executable(tree-height src/hackerrank-challenges/tree-height.cpp)
+add_executable(winning-hands src/hackerrank-challenges/winning-hands.cpp)
+
 # exam
 add_executable(perly src/exam/perly.cpp)
+add_executable(nwd src/exam/nwd.cpp)
+add_executable(sko src/exam/sko.cpp)
+add_executable(drzewo src/exam/drzewo.cpp)
+
+# exam2
 
 add_executable(interval_tree_impl ${INT_TREE_IMPL})
 add_executable(testy_drzewa ${TEST_INT_TREE})
