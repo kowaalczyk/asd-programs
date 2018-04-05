@@ -40,11 +40,11 @@ set<int> s; // val, nwd_without_val
 unsigned int current_nwd = 0;
 
 int main() {
-    scanf("%u\n", &n);
+    cin >> n;
     for(int i=0; i<n; i++) {
         unsigned int val;
         char op;
-        scanf("%c %u\n", &op, &val);
+        cin >> op >> val;
         if(op == '+') {
             if(s.empty()) {
                 current_nwd = val;
@@ -63,7 +63,7 @@ int main() {
                 }
             }
         }
-        printf("%u\n", current_nwd);
+        cout << current_nwd << endl;
     }
     return 0;
 }
