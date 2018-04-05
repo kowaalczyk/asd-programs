@@ -3,8 +3,8 @@
 //
 
 #include <set>
-#include <iostream>
 #include <vector>
+#include <cstdio>
 
 using namespace std;
 
@@ -35,16 +35,21 @@ int nwd(int a, int b) {
     }
 }
 
-unsigned int n;
+int n;
 set<int> s; // val, nwd_without_val
-unsigned int current_nwd = 0;
+int current_nwd = 0;
 
 int main() {
-    cin >> n;
+    scanf("%d", &n);
+    getchar(); // '\n'
     for(int i=0; i<n; i++) {
-        unsigned int val;
+        int val;
         char op;
-        cin >> op >> val;
+        op = static_cast<char>(getchar());
+        getchar(); // ' '
+        scanf("%d", &val);
+        getchar(); // \n
+
         if(op == '+') {
             if(s.empty()) {
                 current_nwd = val;
@@ -55,15 +60,15 @@ int main() {
             s.emplace(val);
         } else {
             s.erase(val);
-            current_nwd = *(s.begin());
-            for(auto it = s.begin(); it != s.end(); i++) {
+            current_nwd = s.begin() == s.end() ? 1 : *(s.begin());
+            for(auto it = s.begin(); it != s.end(); it++) {
                 current_nwd = nwd(current_nwd, *it);
                 if(current_nwd == 1) {
                     break;
                 }
             }
         }
-        cout << current_nwd << endl;
+        printf("%d\n", current_nwd);
     }
     return 0;
 }
