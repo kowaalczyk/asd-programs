@@ -64,7 +64,8 @@ add_executable(winning-hands src/hackerrank-challenges/winning-hands.cpp)
 add_executable(perly src/exam/perly.cpp)
 add_executable(nwd src/exam/nwd.cpp)
 add_executable(sko src/exam/sko.cpp)
-add_executable(drzewo src/exam/drzewo.cpp)
+add_executable(drzewo src/exam/drzewo.cpp src/exam/ciag.cpp)
+add_executable(ciag src/exam/ciag.cpp)
 
 # exam2
 
